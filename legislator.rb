@@ -10,15 +10,4 @@ class Legislator
   def self.active
     all :conditions => {:active => true}
   end
-  
-  private
-  
-  def self.chamber_for(api_legislator)
-    {
-      'Rep' => 'House',
-      'Sen' => 'Senate',
-      'Del' => 'House',
-      'Com' => 'House'
-    }[api_legislator.title]
-  end
 end

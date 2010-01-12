@@ -1,10 +1,16 @@
 namespace :legislators do
 
-  desc "Load legislators from the Sunlight API"
-  task :update => :environment do
-    require 'sunlight'
-    Sunlight::Base.api_key = config[:sunlight_api_key]
+  desc "Run each source's update command"
+  task :update => :sync do
+    legislators = Legislator.active
     
+    @sources.each do |source|
+      source.camelize.constantize.update legislators
+    end
+  end
+
+  desc "Load legislators from the Sunlight API"
+  task :sync => :environment do
     old_legislators = Legislator.active
     
     Sunlight::Legislator.all_where(:in_office => 1).each do |api_legislator|
@@ -18,7 +24,12 @@ namespace :legislators do
       
       legislator.attributes = {
         :active => true,
-        :chamber => Legislator.chamber_for(api_legislator),
+        :chamber => {
+            'Rep' => 'House',
+            'Sen' => 'Senate',
+            'Del' => 'House',
+            'Com' => 'House'
+          }[api_legislator.title],
         
         :crp_id => api_legislator.crp_id,
         :govtrack_id => api_legislator.govtrack_id,
@@ -39,8 +50,4 @@ end
 
 task :environment do
   require 'drumbone'
-end
-
-def config
-  @config ||= YAML.load_file 'config.yml'
 end

@@ -4,9 +4,8 @@ require 'rubygems'
 require 'sinatra'
 require 'mongomapper'
 
+require 'sunlight'
 require 'legislator'
-
-Dir.glob('sources/*.rb').each {|source| load source}
 
 get '/' do
   Legislator.all.map do |legislator|
@@ -14,9 +13,20 @@ get '/' do
   end.join "\n<br/>"
 end
 
+
+
+def config
+  @config ||= YAML.load_file 'config.yml'
+end
+
 configure do
-  @config = YAML.load_file 'config.yml'
+  @sources = Dir.glob('sources/*.rb').map do |source|
+    load source
+    File.basename source, File.extname(source)
+  end
   
-  MongoMapper.connection = @config[:database][:hostname]
-  MongoMapper.database = @config[:database][:database]
+  Sunlight::Base.api_key = config[:sunlight_api_key]
+  
+  MongoMapper.connection = config[:database][:hostname]
+  MongoMapper.database = config[:database][:database]
 end
