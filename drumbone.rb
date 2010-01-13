@@ -2,23 +2,30 @@
 
 require 'rubygems'
 require 'sinatra'
-require 'mongomapper'
+require 'mongo_mapper'
 
 require 'sunlight'
 require 'legislator'
 
-get '/legislators' do
+get /legislators(?:\.(\w+))?/ do
 #   params[:sections].split(',').each do |section|
 #     source = section.camelize.constantize rescue nil
 #   end
   legislator = Legislator.first :conditions => {:bioguide_id => params[:bioguide_id]}
   if legislator
-    legislator.to_json
+    if params[:captures] == ['jsonp'] and params[:callback]
+      jsonp legislator.to_json, params[:callback]
+    else
+      legislator.to_json
+    end
   else
     raise Sinatra::NotFound, "Four oh four"
   end
 end
 
+def jsonp(json, callback)
+  "#{callback}(#{json});"
+end
 
 def config
   @config ||= YAML.load_file 'config.yml'
