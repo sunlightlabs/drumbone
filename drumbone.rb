@@ -7,12 +7,17 @@ require 'mongomapper'
 require 'sunlight'
 require 'legislator'
 
-get '/' do
-  Legislator.all.map do |legislator|
-    "#{legislator.title}. #{legislator.last_name}"
-  end.join "\n<br/>"
+get '/legislators' do
+#   params[:sections].split(',').each do |section|
+#     source = section.camelize.constantize rescue nil
+#   end
+  legislator = Legislator.first :conditions => {:bioguide_id => params[:bioguide_id]}
+  if legislator
+    legislator.to_json
+  else
+    raise Sinatra::NotFound, "Four oh four"
+  end
 end
-
 
 
 def config
