@@ -21,13 +21,17 @@ get /legislators(?:\.(\w+))?/ do
   
   if legislator
     if params[:captures] == ['jsonp'] and params[:callback]
-      jsonp legislator.to_json, params[:callback]
+      jsonp json(legislator), params[:callback]
     else
-      legislator.to_json
+      json legislator
     end
   else
     raise Sinatra::NotFound, "Four oh four"
   end
+end
+
+def json(legislator)
+  {:legislator => legislator}.to_json
 end
 
 def jsonp(json, callback)
