@@ -7,6 +7,11 @@ class Legislator
   
   timestamps!
   
+  # will always be returned as part of the JSON response
+  def self.fields
+    [:created_at, :updated_at, :bioguide_id, :chamber, :active]
+  end
+  
   def self.active
     all :conditions => {:active => true}
   end
