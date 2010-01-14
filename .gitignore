@@ -1,1 +1,3 @@
 /config.yml
+/config.ru
+tmp/*
