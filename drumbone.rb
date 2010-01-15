@@ -20,6 +20,8 @@ get /legislators(?:\.(\w+))?/ do
   legislator = Legislator.first :conditions => {:bioguide_id => params[:bioguide_id]}, :fields => fields
   
   if legislator
+    response['Content-Type'] = 'application/json'
+    
     if params[:captures] == ['jsonp'] and params[:callback]
       jsonp json(legislator), params[:callback]
     else
