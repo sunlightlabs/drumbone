@@ -4,8 +4,6 @@ require 'rubygems'
 require 'sinatra'
 require 'mongo_mapper'
 
-require 'sunlight'
-
 get /([a-z]+)(?:\.(\w+))?/ do
   if !entities.include?(params[:captures][0])
     raise Sinatra::NotFound, "Four oh four."

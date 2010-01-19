@@ -1,3 +1,5 @@
+require 'sunlight'
+
 class Bio
   
   def self.update
