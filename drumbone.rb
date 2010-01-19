@@ -11,11 +11,11 @@ get /legislators(?:\.(\w+))?/ do
   
   # figure out which sections are requested
   requested_sources = (params[:sections] || '').split(',').map do |section|
-    sources.include?(section) ? section.camelize.constantize : nil
+    Legislator.fields.keys.include?(section.to_sym) ? section.to_sym : nil
   end.compact
   
   # get the combined list of fields to ask for
-  fields = Legislator.fields + requested_sources.map {|source| source.fields}.flatten
+  fields = Legislator.fields[:basic] + requested_sources.map {|source| Legislator.fields[source]}.flatten
   
   legislator = Legislator.first :conditions => {:bioguide_id => params[:bioguide_id]}, :fields => fields
   

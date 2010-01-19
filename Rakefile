@@ -2,10 +2,12 @@ namespace :legislators do
 
   desc "Run each source's update command"
   task :update => :sync do
-    legislators = Legislator.active
-    
-    @sources.each do |source|
-      source.camelize.constantize.update legislators
+    if ENV['source']
+      ENV['source'].camelize.constantize.update
+    else
+      @sources.each do |source|
+        source.camelize.constantize.update
+      end
     end
   end
 

@@ -7,9 +7,11 @@ class Legislator
   
   timestamps!
   
-  # will always be returned as part of the JSON response
+  # basic fields will always be returned as part of the JSON response
   def self.fields
-    [:created_at, :updated_at, :bioguide_id, :chamber, :active]
+    {:basic => [:created_at, :updated_at, :bioguide_id, :chamber, :active],
+     :bio => [:first_name, :nickname, :last_name, :state, :district, :party, :title, :gender, :phone, :website, :twitter_id, :youtube_url]
+    }
   end
   
   def self.active

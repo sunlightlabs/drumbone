@@ -1,10 +1,8 @@
 class Bio
   
-  def self.fields
-    [:first_name, :nickname, :last_name, :state, :district, :party, :title, :gender, :phone, :website, :twitter_id, :youtube_url]
-  end
-  
-  def self.update(legislators)
+  def self.update
+    legislators = Legislator.active
+    
     legislators.each do |legislator|
       api_legislator = Sunlight::Legislator.all_where(:bioguide_id => legislator.bioguide_id).first
       legislator.attributes = {
