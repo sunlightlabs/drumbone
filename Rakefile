@@ -18,7 +18,7 @@ namespace :entities do
   desc "Run each entity's sync command"
   task :sync => :environment do
     if ENV['entity']
-      ENV['entity'].camelize.constantize.update
+      ENV['entity'].camelize.constantize.sync
     else
       @entities.each do |entity|
         entity.camelize.constantize.sync
