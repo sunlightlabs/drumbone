@@ -7,6 +7,7 @@ class Bill
   key :chamber, String, :required => true
   key :session, String, :required => true
   
+  
   timestamps!
   
   
@@ -17,7 +18,8 @@ class Bill
   def self.fields
     {
       :basic => [:govtrack_id, :type, :session, :chamber, :created_at, :updated_at],
-      :info => [:title, :summary, :introduced_at]
+      :info => [:title, :description, :introduced_at, :state],
+      :extended => [:summary]
     }
   end
   
