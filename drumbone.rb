@@ -7,10 +7,6 @@ require 'mongo_mapper'
 require 'sunlight'
 
 get /([a-z]+)(?:\.(\w+))?/ do
-  p params[:captures]
-  p entities
-  p sources
-  # validate input
   if !entities.include?(params[:captures][0])
     raise Sinatra::NotFound, "Four oh four."
   end
