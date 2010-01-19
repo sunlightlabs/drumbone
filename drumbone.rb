@@ -15,11 +15,9 @@ get /([a-z]+)(?:\.(\w+))?/ do
   entity = params[:captures][0].camelize.constantize
   
   # figure out which sections are requested
-  sections = (params[:sections] || '').split(',').map do |section|
-    entity.fields.keys.include?(section.to_sym) ? section.to_sym : nil
-  end.compact
+  sections = ['all','all,'].include?(params[:sections]) ? entity.fields.keys : (params[:sections] || '').split(',')
   
-  fields = entity.fields[:basic] + sections.map {|source| entity.fields[source]}.flatten
+  fields = entity.fields[:basic] + sections.map {|section| entity.fields[section.to_sym]}.flatten.compact
   document = entity.first :conditions => {entity.search_key => params[entity.search_key]}, :fields => fields
   
   if document
@@ -35,16 +33,18 @@ get /([a-z]+)(?:\.(\w+))?/ do
   end
 end
 
+
 def json(entity, document)
   {
     entity.to_s.underscore => document, 
-    :sections => entity.fields.keys.reject {|k| k == :basic}
+    :sections => entity.fields.keys.reject {|k| k == :basic} << 'all'
   }.to_json
 end
 
 def jsonp(json, callback)
   "#{callback}(#{json});"
 end
+
 
 def config
   @config ||= YAML.load_file 'config.yml'
