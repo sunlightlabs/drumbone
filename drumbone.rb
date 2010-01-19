@@ -12,8 +12,8 @@ get /([a-z]+)(?:\.(\w+))?/ do
     raise Sinatra::NotFound, "Unsupported format."
   end
   
-
-  entity = params[:captures][0].camelize.constantize
+  entity_name = params[:captures][0]
+  entity = entity_name.camelize.constantize
   
   # figure out which sections are requested
   sections = (params[:sections] || '').split(',').map do |section|
@@ -27,17 +27,17 @@ get /([a-z]+)(?:\.(\w+))?/ do
     response['Content-Type'] = 'application/json'
     
     if params[:captures][1] == 'jsonp' and params[:callback]
-      jsonp json(document), params[:callback]
+      jsonp json(entity_name, document), params[:callback]
     else
-      json document
+      json entity_name, document
     end
   else
     raise Sinatra::NotFound, "#{params[:captures][0].capitalize} not found"
   end
 end
 
-def json(legislator)
-  {:legislator => legislator}.to_json
+def json(name, document)
+  {name => document}.to_json
 end
 
 def jsonp(json, callback)
