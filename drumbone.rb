@@ -5,30 +5,40 @@ require 'sinatra'
 require 'mongo_mapper'
 
 require 'sunlight'
-require 'legislator'
 
-get /legislators(?:\.(\w+))?/ do
+get /([a-z]+)(?:\.(\w+))?/ do
+  p params[:captures]
+  p entities
+  p sources
+  # validate input
+  if !entities.include?(params[:captures][0])
+    raise Sinatra::NotFound, "Four oh four."
+  end
+  if params[:captures][1] and ![:json, :jsonp].include?(params[:captures][1])
+    raise Sinatra::NotFound, "Unsupported format."
+  end
+  
+
+  entity = params[:captures][0].camelize.constantize
   
   # figure out which sections are requested
-  requested_sources = (params[:sections] || '').split(',').map do |section|
-    Legislator.fields.keys.include?(section.to_sym) ? section.to_sym : nil
+  sections = (params[:sections] || '').split(',').map do |section|
+    entity.fields.keys.include?(section.to_sym) ? section.to_sym : nil
   end.compact
   
-  # get the combined list of fields to ask for
-  fields = Legislator.fields[:basic] + requested_sources.map {|source| Legislator.fields[source]}.flatten
+  fields = entity.fields[:basic] + sections.map {|source| entity.fields[source]}.flatten
+  document = entity.first :conditions => {entity.search_key => params[entity.search_key]}, :fields => fields
   
-  legislator = Legislator.first :conditions => {:bioguide_id => params[:bioguide_id]}, :fields => fields
-  
-  if legislator
+  if document
     response['Content-Type'] = 'application/json'
     
-    if params[:captures] == ['jsonp'] and params[:callback]
-      jsonp json(legislator), params[:callback]
+    if params[:captures][1] == 'jsonp' and params[:callback]
+      jsonp json(document), params[:callback]
     else
-      json legislator
+      json document
     end
   else
-    raise Sinatra::NotFound, "Four oh four"
+    raise Sinatra::NotFound, "#{params[:captures][0].capitalize} not found"
   end
 end
 
@@ -50,9 +60,18 @@ def sources
   end
 end
 
+def entities
+  @entities ||= Dir.glob('entities/*.rb').map do |entity|
+    File.basename entity, File.extname(entity)
+  end
+end
+
 configure do
   sources.each do |source|
     load "sources/#{source}.rb"
+  end
+  entities.each do |entity|
+    load "entities/#{entity}.rb"
   end
   
   Sunlight::Base.api_key = config[:sunlight_api_key]

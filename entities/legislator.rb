@@ -1,3 +1,9 @@
+# Entity classes must support three class level methods:
+#
+# search_key: returns the search key used to look up an entity.
+# fields: returns a hash of keys to sections of fields. At a minimum, :basic must be a supported key.
+# active: returns an array of the currently active subset of the entity.
+
 class Legislator
   include MongoMapper::Document
   
@@ -6,6 +12,10 @@ class Legislator
   key :chamber, String, :required => true
   
   timestamps!
+  
+  def self.search_key
+    :bioguide_id
+  end
   
   # basic fields will always be returned as part of the JSON response
   def self.fields
