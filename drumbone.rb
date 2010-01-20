@@ -8,7 +8,7 @@ get /([a-z]+)(?:\.(\w+))?/ do
   if !entities.include?(params[:captures][0])
     raise Sinatra::NotFound, "Four oh four."
   end
-  if params[:captures][1] and ![:json, :jsonp].include?(params[:captures][1])
+  if params[:captures][1] and ![:json, :jsonp].include?(params[:captures][1].to_sym)
     raise Sinatra::NotFound, "Unsupported format."
   end
   
