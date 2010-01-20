@@ -35,8 +35,10 @@ end
 
 
 def json(entity, document)
+  attributes = document.attributes
+  attributes.delete :_id
   {
-    entity.to_s.underscore => document, 
+    entity.to_s.underscore => attributes, 
     :sections => entity.fields.keys.reject {|k| k == :basic} << 'all'
   }.to_json
 end
