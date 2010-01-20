@@ -1,4 +1,4 @@
-class Bills
+class Legislation
   
   def self.update
     session = Bill.current_session
