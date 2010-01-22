@@ -3,9 +3,8 @@ task :update => :environment do
   if ENV['model']
     ENV['model'].camelize.constantize.update
   else
-    models.each do |model|
-      model.camelize.constantize.update
-    end
+    # written out explicitly because order matters
+    [Legislator, Bill].each {|model| model.update}
   end
 end
 
