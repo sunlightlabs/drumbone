@@ -3,30 +3,32 @@
 require 'rubygems'
 require 'sinatra'
 require 'mongo_mapper'
+Dir.glob('sources/*.rb').each {|source| load source}
+Dir.glob('models/*.rb').each {|model| load model}
 
 get /([a-z]+)(?:\.(\w+))?/ do
-  if !entities.include?(params[:captures][0])
+  if !models.include?(params[:captures][0])
     raise Sinatra::NotFound, "Four oh four."
   end
   if params[:captures][1] and ![:json, :jsonp].include?(params[:captures][1].to_sym)
     raise Sinatra::NotFound, "Unsupported format."
   end
   
-  entity = params[:captures][0].camelize.constantize
+  model = params[:captures][0].camelize.constantize
   
   # figure out which sections are requested
-  sections = ['all','all,'].include?(params[:sections]) ? entity.fields.keys : (params[:sections] || '').split(',')
+  sections = ['all','all,'].include?(params[:sections]) ? model.fields.keys : (params[:sections] || '').split(',')
   
-  fields = entity.fields[:basic] + sections.map {|section| entity.fields[section.to_sym]}.flatten.compact
-  document = entity.first :conditions => {entity.search_key => params[entity.search_key]}, :fields => fields
+  fields = model.fields[:basic] + sections.map {|section| model.fields[section.to_sym]}.flatten.compact
+  document = model.first :conditions => {model.search_key => params[model.search_key]}, :fields => fields
   
   if document
     response['Content-Type'] = 'application/json'
     
     if params[:captures][1] == 'jsonp' and params[:callback]
-      jsonp json(entity, document), params[:callback]
+      jsonp json(model, document), params[:callback]
     else
-      json entity, document
+      json model, document
     end
   else
     raise Sinatra::NotFound, "#{params[:captures][0].capitalize} not found"
@@ -34,12 +36,12 @@ get /([a-z]+)(?:\.(\w+))?/ do
 end
 
 
-def json(entity, document)
+def json(model, document)
   attributes = document.attributes
   attributes.delete :_id
   {
-    entity.to_s.underscore => attributes, 
-    :sections => entity.fields.keys.reject {|k| k == :basic} << 'all'
+    model.to_s.underscore => attributes, 
+    :sections => model.fields.keys.reject {|k| k == :basic} << 'all'
   }.to_json
 end
 
@@ -52,28 +54,25 @@ def config
   @config ||= YAML.load_file 'config.yml'
 end
 
-def sources
-  @sources ||= Dir.glob('sources/*.rb').map do |source|
-    File.basename source, File.extname(source)
-  end
-end
-
-def entities
-  @entities ||= Dir.glob('entities/*.rb').map do |entity|
-    File.basename entity, File.extname(entity)
+def models
+  @models ||= Dir.glob('models/*.rb').map do |model|
+    File.basename model, File.extname(model)
   end
 end
 
 configure do
-  sources.each do |source|
-    load "sources/#{source}.rb"
-  end
-  entities.each do |entity|
-    load "entities/#{entity}.rb"
-  end
-  
   Sunlight::Base.api_key = config[:sunlight_api_key]
   
   MongoMapper.connection = config[:database][:hostname]
   MongoMapper.database = config[:database][:database]
+end
+
+class Report
+  include MongoMapper::Document
+  
+  key :source, String, :required => true
+  key :status, String, :required => true
+  
+  timestamps!
+  
 end

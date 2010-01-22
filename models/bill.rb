@@ -27,7 +27,7 @@ class Bill
     all :conditions => {:session => current_session.to_s}
   end
   
-  def self.sync
+  def self.update
     session = self.current_session
     
     bills = 0

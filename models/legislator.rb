@@ -36,7 +36,7 @@ class Legislator
     all :conditions => {:active => true}
   end
   
-  def self.sync
+  def self.update
     old_legislators = self.active
     
     Sunlight::Legislator.all_where(:in_office => 1).each do |api_legislator|
