@@ -26,6 +26,7 @@ class Report
   
   key :source, String, :required => true
   key :status, String, :required => true
+  key :message, String
   
   timestamps!
   
