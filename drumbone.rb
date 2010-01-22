@@ -14,9 +14,9 @@ get /^\/(#{models.join '|'})(?:\.json)?$/ do
   
   if document
     if params[:callback]
-      jsonp json(model, document), params[:callback]
+      jsonp json(document), params[:callback]
     else
-      json model, document
+      json document
     end
   else
     raise Sinatra::NotFound, "#{model} not found"
@@ -24,7 +24,8 @@ get /^\/(#{models.join '|'})(?:\.json)?$/ do
 end
 
 
-def json(model, document)
+def json(document)
+  model = document.class
   attributes = document.attributes
   attributes.delete :_id
   {
