@@ -1,5 +1,4 @@
 require 'rubygems'
-require 'sinatra'
 require 'mongo_mapper'
 Dir.glob('sources/*.rb').each {|source| load source}
 Dir.glob('models/*.rb').each {|model| load model}
@@ -11,7 +10,7 @@ def models
 end
 
 def config
-  @config ||= YAML.load_file 'config.yml'
+  @config ||= YAML.load_file 'config/config.yml'
 end
 
 configure do
