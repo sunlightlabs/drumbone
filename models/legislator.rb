@@ -31,6 +31,8 @@ class Legislator
   end
   
   def self.update
+    initialize if Legislator.count == 0
+    
     old_legislators = all :conditions => {:in_office => true}
     
     Sunlight::Legislator.all_where(:in_office => 1).each do |api_legislator|
@@ -52,9 +54,21 @@ class Legislator
     end
   end
   
+  def self.initialize
+    puts "Initializing out-of-office legislators..."
+    
+    Sunlight::Legislator.all_where(:in_office => 0).each do |api_legislator|
+      legislator = Legislator.new :bioguide_id => api_legislator.bioguide_id
+      puts "[Legislator #{legislator.bioguide_id}] Created"
+      
+      legislator.attributes = attributes_from api_legislator
+      legislator.save
+    end
+  end
+  
   def self.attributes_from(api_legislator)
     {
-      :in_office => true,
+      :in_office => api_legislator.in_office,
       :chamber => {
           'Rep' => 'House',
           'Sen' => 'Senate',
