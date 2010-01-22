@@ -1,7 +1,6 @@
 require 'rubygems'
 require 'mongo_mapper'
 
-Dir.glob('sources/*.rb').each {|source| load source}
 Dir.glob('models/*.rb').each {|model| load model}
 
 def models
