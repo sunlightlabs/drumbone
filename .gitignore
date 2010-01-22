@@ -1,5 +1,5 @@
-/config.yml
+/config/config.yml
 /config.ru
-tmp/*
+/tmp/*
 /data
 /public
