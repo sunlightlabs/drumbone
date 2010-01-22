@@ -1,12 +1,10 @@
-# Entity classes must support four class level methods:
+# Models must support four class level methods:
 #
 # search_key: returns the search key used to look up an entity.
 # fields: returns a hash of keys to sections of fields. 
-#   :basic must be supported, and should contain all database keys, including timestamps.
-#   :all may not be used - it is a special keyword to get all fields.
+#   :basic must be supported, and should contain all database keys and needed identifiers, including timestamps.
 #   
-# active: returns an array of the currently active subset of the entity.
-# sync: Used to sync the entity's concept of "active" members. Will be run nightly via rake.
+# update: Do whatever you have to do to update the model.
 
 require 'sunlight'
 
