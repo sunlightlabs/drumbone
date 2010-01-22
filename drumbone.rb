@@ -13,27 +13,19 @@ get /^\/(#{models.join '|'})(?:\.json)?$/ do
   document = model.first :conditions => {model.search_key => params[model.search_key]}, :fields => fields
   
   if document
-    if params[:callback]
-      jsonp json(document), params[:callback]
-    else
-      json document
-    end
+    json document, params[:callback]
   else
     raise Sinatra::NotFound, "#{model} not found"
   end
 end
 
-
-def json(document)
+def json(document, callback = nil)
   model = document.class
   attributes = document.attributes
   attributes.delete :_id
-  {
+  json = {
     model.to_s.underscore => attributes, 
     :sections => model.fields.keys.reject {|k| k == :basic} << 'all'
   }.to_json
-end
-
-def jsonp(json, callback)
-  "#{callback}(#{json});"
+  callback ? "#{callback}(#{json});" : json
 end
