@@ -8,8 +8,8 @@ get /^\/(#{models.join '|'})(?:\.json)?$/ do
   response['Content-Type'] = 'application/json'
   model = params[:captures][0].camelize.constantize
   
-  sections = ['all','all,'].include?(params[:sections]) ? model.fields.keys : (params[:sections] || '').split(',')
-  fields = model.fields[:basic] + sections.map {|section| model.fields[section.to_sym]}.flatten.compact
+  sections = params[:sections] ? (params[:sections] || '').split(',').map : model.fields.keys
+  fields = sections.map {|section| model.fields[section.to_sym]}.flatten.compact
   document = model.first :conditions => {model.search_key => params[model.search_key]}, :fields => fields
   
   if document
@@ -25,7 +25,7 @@ def json(document, callback = nil)
   attributes.delete :_id
   json = {
     model.to_s.underscore => attributes, 
-    :sections => model.fields.keys.reject {|k| k == :basic} << 'all'
+    :sections => model.fields.keys.sort
   }.to_json
   callback ? "#{callback}(#{json});" : json
 end
