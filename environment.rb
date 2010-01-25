@@ -24,10 +24,24 @@ end
 class Report
   include MongoMapper::Document
   
-  key :source, String, :required => true
   key :status, String, :required => true
+  key :source, String, :required => true
   key :message, String
   
   timestamps!
+  
+  def self.file(status, source, message, objects = nil)
+    report = Report.new :source => source.to_s, :status => status, :message => message
+    report.attributes = {:objects => objects} if objects
+    report.save
+  end
+  
+  def self.success(source, message, objects = nil)
+    file "SUCCESS", source, message, objects
+  end
+  
+  def self.failure(source, message, objects = nil)
+    file "FAILURE", source, message, objects
+  end
   
 end

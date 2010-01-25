@@ -33,6 +33,9 @@ class Legislator
   def self.update
     initialize if Legislator.count == 0
     
+    active_count = 0
+    inactive_count = 0
+    
     old_legislators = all :conditions => {:in_office => true}
     
     Sunlight::Legislator.all_where(:in_office => 1).each do |api_legislator|
@@ -46,12 +49,17 @@ class Legislator
       
       legislator.attributes = attributes_from api_legislator
       legislator.save
+      
+      added_count += 1
     end
     
     old_legislators.each do |legislator|
       legislator.update_attribute :in_office, false
       puts "[Legislator #{legislator.bioguide_id}] Marked Inactive"
+      inactive_count += 1
     end
+    
+    Report.success self, "Created/updated #{active_count} active legislators, marked #{inactive_count} as inactive"
   end
   
   def self.initialize
