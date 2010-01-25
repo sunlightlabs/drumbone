@@ -9,5 +9,5 @@ task :update => :environment do
 end
 
 task :environment do
-  require 'config/environment'
+  require 'environment'
 end

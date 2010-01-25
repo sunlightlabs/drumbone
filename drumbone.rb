@@ -2,7 +2,7 @@
 
 require 'rubygems'
 require 'sinatra'
-require 'config/environment'
+require 'environment'
 
 get /^\/(#{models.join '|'})(?:\.json)?$/ do
   response['Content-Type'] = 'application/json'
