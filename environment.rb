@@ -44,4 +44,8 @@ class Report
     file "FAILURE", source, message, objects
   end
   
+  def self.warning(source, message, objects = nil)
+    file "WARNING", source, message, objects
+  end
+  
 end

@@ -29,10 +29,10 @@ class Bill
   
   def self.update
     session = Bill.current_session
-    bills = 0
+    count = 0
+    missing_ids = []
     
     if system("rsync -az govtrack.us::govtrackdata/us/#{session}/bills/ data/govtrack/#{session}/bills/")
-      
       Dir.glob("data/govtrack/#{session}/bills/*.xml").each do |path|
         doc = Hpricot open(path)
         
@@ -41,10 +41,10 @@ class Bill
         govtrack_id = "#{type}#{number}"
         
         if bill = Bill.first(:conditions => {:govtrack_id => govtrack_id})
-          puts "[Bill #{bill.govtrack_id}] Updated"
+          # puts "[Bill #{bill.govtrack_id}] Updated"
         else
           bill = Bill.new :govtrack_id => govtrack_id
-          puts "[Bill #{bill.govtrack_id}] Created"
+          # puts "[Bill #{bill.govtrack_id}] Created"
         end
         
         bill.attributes = {
@@ -57,30 +57,38 @@ class Bill
           :title => title_for(doc),
           :description => description_for(doc),
           :summary => doc.at(:summary).inner_text,
-          :sponsor => sponsor_for(doc),
-          :cosponsors => cosponsors_for(doc)
+          :sponsor => sponsor_for(doc, missing_ids),
+          :cosponsors => cosponsors_for(doc, missing_ids)
         }
         
         bill.save
+        
+        count += 1
+      end
+      
+      Report.success self, "Synced #{count} bills for session ##{session} from GovTrack.us."
+      if missing_ids.any?
+        missing_ids = missing_ids.uniq
+        Report.warning self, "Found #{missing_ids.size} missing GovTrack IDs, attached.", missing_ids
       end
     else
-      puts "Couldn't rsync to Govtrack.us."
+      Report.failure self, "Couldn't rsync to Govtrack.us."
     end
   end
   
-  def self.sponsor_for(doc)
+  def self.sponsor_for(doc, missing_ids)
     sponsor = doc.at :sponsor
-    sponsor and sponsor['id'] ? legislator_for(sponsor['id']) : nil
+    sponsor and sponsor['id'] ? legislator_for(sponsor['id'], missing_ids) : nil
   end
   
-  def self.cosponsors_for(doc)
+  def self.cosponsors_for(doc, missing_ids)
     cosponsors = (doc/:cosponsor).map do |cosponsor| 
-      cosponsor and cosponsor['id'] ? legislator_for(cosponsor['id']) : nil
+      cosponsor and cosponsor['id'] ? legislator_for(cosponsor['id'], missing_ids) : nil
     end.compact
     cosponsors.any? ? cosponsors : nil
   end
   
-  def self.legislator_for(govtrack_id)
+  def self.legislator_for(govtrack_id, missing_ids)
     legislator = Legislator.first :conditions => {:govtrack_id => govtrack_id}, :fields => Legislator.fields[:basic] + Legislator.fields[:bio]
     
     if legislator
@@ -89,7 +97,8 @@ class Bill
       attributes
     else
       # log problem: missing govtrack_id
-      puts "Missing govtrack_id: #{govtrack_id}"
+      # puts "Missing govtrack_id: #{govtrack_id}"
+      missing_ids << govtrack_id
       nil
     end
   end

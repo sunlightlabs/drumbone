@@ -4,5 +4,5 @@ task :update => :environment do
 end
 
 task :environment do
-  require 'environment'
+  require 'drumbone'
 end
