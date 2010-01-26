@@ -16,6 +16,11 @@ set :admin_runner, runner
 role :app, domain
 role :web, domain
 
+desc "Run the update command for a given model"
+task :update, :roles => :app, :except => { :no_release => true } do
+  run "cd #{current_path} && rake update model=#{ENV['model']}"
+end
+
 namespace :deploy do
   task :start do ; end
   task :stop do ; end
@@ -28,7 +33,7 @@ namespace :deploy do
   
   desc "Get shared files into position"
   task :after_update_code, :roles => [:web, :app] do
-    run "ln -nfs #{shared_path}/config.yml #{release_path}/config.yml"
+    run "ln -nfs #{shared_path}/config.yml #{release_path}/config/config.yml"
     run "ln -nfs #{shared_path}/config.ru #{release_path}/config.ru"
     run "rm #{File.join release_path, 'tmp', 'pids'}"
     run "rm #{File.join release_path, 'public', 'system'}"
