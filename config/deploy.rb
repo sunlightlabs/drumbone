@@ -18,7 +18,11 @@ role :web, domain
 
 desc "Run the update command for a given model"
 task :update, :roles => :app, :except => { :no_release => true } do
-  run "cd #{current_path} && rake update model=#{ENV['model']}"
+  if ENV['model']
+    run "cd #{current_path} && rake update model=#{ENV['model']}"
+  else
+    run "cd #{current_path} && rake update"
+  end
 end
 
 namespace :deploy do
