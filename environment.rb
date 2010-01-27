@@ -35,6 +35,7 @@ class Report
   def self.file(status, source, message, objects = {})
     report = Report.new :source => source.to_s, :status => status, :message => message
     report.attributes = objects
+    puts "[#{source}] #{status}: #{message}"
     report.save
   end
   
