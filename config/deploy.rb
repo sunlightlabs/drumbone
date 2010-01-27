@@ -16,6 +16,10 @@ set :admin_runner, runner
 role :app, domain
 role :web, domain
 
+set :use_sudo, false
+after "deploy", "deploy:cleanup"
+after "deploy:update_code", "deploy:shared_links"
+
 desc "Run the update command for a given model"
 task :update, :roles => :app, :except => { :no_release => true } do
   if ENV['model']
@@ -36,7 +40,7 @@ namespace :deploy do
   end
   
   desc "Get shared files into position"
-  task :after_update_code, :roles => [:web, :app] do
+  task :shared_links, :roles => [:web, :app] do
     run "ln -nfs #{shared_path}/config.yml #{release_path}/config/config.yml"
     run "ln -nfs #{shared_path}/config.ru #{release_path}/config.ru"
     run "ln -nfs #{shared_path}/data #{release_path}/data"
