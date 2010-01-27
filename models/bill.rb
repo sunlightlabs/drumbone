@@ -23,8 +23,8 @@ class Bill
   
   def self.fields
     {
-      :basic => [:govtrack_id, :type, :session, :chamber, :created_at, :updated_at],
-      :info => [:short_title, :official_title, :description, :introduced_at, :state],
+      :basic => [:govtrack_id, :type, :session, :chamber, :created_at, :updated_at, :state],
+      :info => [:short_title, :official_title, :description, :introduced_at],
       :extended => [:summary],
       :sponsorship => [:sponsor, :cosponsors],
       :sponsorship_ids => [:sponsor_id, :cosponsor_ids]
@@ -51,10 +51,10 @@ class Bill
         govtrack_id = "#{type}#{number}"
         
         if bill = Bill.first(:conditions => {:govtrack_id => govtrack_id})
-          puts "[Bill #{bill.govtrack_id}] About to be updated"
+          #puts "[Bill #{bill.govtrack_id}] About to be updated"
         else
           bill = Bill.new :govtrack_id => govtrack_id
-          puts "[Bill #{bill.govtrack_id}] About to be created"
+          #puts "[Bill #{bill.govtrack_id}] About to be created"
         end
         
         sponsor = sponsor_for doc, missing_ids
