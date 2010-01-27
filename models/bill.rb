@@ -26,7 +26,7 @@ class Bill
       :basic => [:govtrack_id, :type, :session, :chamber, :created_at, :updated_at, :state],
       :info => [:short_title, :official_title, :description, :introduced_at],
       :extended => [:summary],
-      :sponsorship => [:sponsor, :cosponsors],
+      :sponsorships => [:sponsor, :cosponsors],
       :sponsorship_ids => [:sponsor_id, :cosponsor_ids]
     }
   end
