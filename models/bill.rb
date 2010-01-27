@@ -38,6 +38,7 @@ class Bill
     
     start = Time.now
     
+    FileUtils.mkdir_p "data/govtrack/#{session}/bills"
     if system("rsync -az govtrack.us::govtrackdata/us/#{session}/bills/ data/govtrack/#{session}/bills/")
       
       bills = Dir.glob "data/govtrack/#{session}/bills/*.xml"
