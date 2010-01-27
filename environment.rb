@@ -39,15 +39,15 @@ class Report
   end
   
   def self.success(source, message, objects = {})
-    file "SUCCESS", source, message, objects
+    file 'SUCCESS', source, message, objects
   end
   
   def self.failure(source, message, objects = {})
-    file "FAILURE", source, message, objects
+    file 'FAILURE', source, message, objects
   end
   
   def self.warning(source, message, objects = {})
-    file "WARNING", source, message, objects
+    file 'WARNING', source, message, objects
   end
   
 end

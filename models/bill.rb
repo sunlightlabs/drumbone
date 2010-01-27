@@ -36,7 +36,10 @@ class Bill
     count = 0
     missing_ids = []
     
+    start = Time.now
+    
     if system("rsync -az govtrack.us::govtrackdata/us/#{session}/bills/ data/govtrack/#{session}/bills/")
+      
       bills = Dir.glob "data/govtrack/#{session}/bills/*.xml"
       # bills = bills.first 20
       bills.each do |path|
@@ -77,7 +80,8 @@ class Bill
         count += 1
       end
       
-      Report.success self, "Synced #{count} bills for session ##{session} from GovTrack.us."
+      Report.success self, "Synced #{count} bills for session ##{session} from GovTrack.us.", {:elapsed_time => Time.now - start}
+      
       if missing_ids.any?
         missing_ids = missing_ids.uniq
         Report.warning self, "Found #{missing_ids.size} missing GovTrack IDs, attached.", {:missing_ids => missing_ids}
