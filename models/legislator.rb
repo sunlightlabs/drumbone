@@ -16,6 +16,11 @@ class Legislator
   key :in_office, Boolean, :required => true
   key :chamber, String, :required => true
   
+  ensure_index :bioguide_id
+  ensure_index :govtrack_id
+  ensure_index :in_office
+  ensure_index :chamber
+  
   timestamps!
   
   def self.search_key
@@ -26,8 +31,25 @@ class Legislator
   def self.fields
     {:basic => [:created_at, :updated_at, :bioguide_id, :govtrack_id, :chamber, :in_office],
      :bio => [:first_name, :nickname, :last_name, :state, :district, :party, :title, :gender],
-     :contact => [:phone, :website, :twitter_id, :youtube_url]
+     :contact => [:phone, :website, :twitter_id, :youtube_url],
+     :statistics => [:bills_sponsored, :bills_cosponsored, :resolutions_sponsored, :resolutions_cosponsored]
     }
+  end
+  
+  def self.update_statistics
+    legislators = all :conditions => {:in_office => true}
+    
+    legislators.each do |legislator|
+      legislator.attributes = {
+        :bills_sponsored => Bill.bills_sponsored(legislator),
+        :bills_cosponsored => Bill.bills_cosponsored(legislator),
+        :resolutions_sponsored => Bill.resolutions_sponsored(legislator),
+        :resolutions_cosponsored => Bill.resolutions_cosponsored(legislator)
+      }
+      legislator.save
+    end
+    
+    Report.success self, "Updated bill statistics for all active legislators"
   end
   
   def self.update
@@ -62,6 +84,7 @@ class Legislator
     Report.success self, "Created/updated #{active_count} active legislators, marked #{inactive_count} as inactive"
   end
   
+  
   def self.initialize
     # puts "Initializing out-of-office legislators..."
     
@@ -75,6 +98,7 @@ class Legislator
       
       initialized_count += 1
     end
+    
     Report.success self, "Initialized #{initialized_count} out-of-office legislators."
   end
   

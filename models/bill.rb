@@ -6,6 +6,13 @@ class Bill
   key :govtrack_id, String, :required => true
   key :chamber, String, :required => true
   key :session, String, :required => true
+  key :state, String, :required => true
+  
+  ensure_index :govtrack_id
+  ensure_index :chamber
+  ensure_index :session
+  ensure_index :sponsor_id
+  ensure_index :cosponsor_ids
   
   timestamps!
   
@@ -17,14 +24,11 @@ class Bill
   def self.fields
     {
       :basic => [:govtrack_id, :type, :session, :chamber, :created_at, :updated_at],
-      :info => [:title, :description, :introduced_at, :state],
+      :info => [:short_title, :official_title, :description, :introduced_at, :state],
       :extended => [:summary],
-      :sponsorship => [:sponsor, :cosponsors]
+      :sponsorship => [:sponsor, :cosponsors],
+      :sponsorship_ids => [:sponsor_id, :cosponsor_ids]
     }
-  end
-  
-  def self.active
-    
   end
   
   def self.update
@@ -33,7 +37,9 @@ class Bill
     missing_ids = []
     
     if system("rsync -az govtrack.us::govtrackdata/us/#{session}/bills/ data/govtrack/#{session}/bills/")
-      Dir.glob("data/govtrack/#{session}/bills/*.xml").each do |path|
+      bills = Dir.glob "data/govtrack/#{session}/bills/*.xml"
+      # bills = bills.first 20
+      bills.each do |path|
         doc = Hpricot open(path)
         
         type = doc.root.attributes['type']
@@ -41,11 +47,14 @@ class Bill
         govtrack_id = "#{type}#{number}"
         
         if bill = Bill.first(:conditions => {:govtrack_id => govtrack_id})
-          # puts "[Bill #{bill.govtrack_id}] Updated"
+          puts "[Bill #{bill.govtrack_id}] About to be updated"
         else
           bill = Bill.new :govtrack_id => govtrack_id
-          # puts "[Bill #{bill.govtrack_id}] Created"
+          puts "[Bill #{bill.govtrack_id}] About to be created"
         end
+        
+        sponsor = sponsor_for doc, missing_ids
+        cosponsors = cosponsors_for doc, missing_ids
         
         bill.attributes = {
           :type => type,
@@ -54,11 +63,13 @@ class Bill
           :chamber => chamber_for(type),
           :state => doc.at(:state).inner_text,
           :introduced_at => Time.at(doc.at(:introduced)['date'].to_i),
-          :title => title_for(doc),
-          :description => description_for(doc),
+          :short_title => short_title_for(doc),
+          :official_title => official_title_for(doc),
           :summary => doc.at(:summary).inner_text,
-          :sponsor => sponsor_for(doc, missing_ids),
-          :cosponsors => cosponsors_for(doc, missing_ids)
+          :sponsor => sponsor,
+          :sponsor_id => sponsor ? sponsor[:govtrack_id] : nil,
+          :cosponsors => cosponsors,
+          :cosponsor_ids => cosponsors ? cosponsors.map {|c| c[:govtrack_id]} : nil
         }
         
         bill.save
@@ -69,7 +80,7 @@ class Bill
       Report.success self, "Synced #{count} bills for session ##{session} from GovTrack.us."
       if missing_ids.any?
         missing_ids = missing_ids.uniq
-        Report.warning self, "Found #{missing_ids.size} missing GovTrack IDs, attached.", missing_ids
+        Report.warning self, "Found #{missing_ids.size} missing GovTrack IDs, attached.", {:missing_ids => missing_ids}
       end
     else
       Report.failure self, "Couldn't rsync to Govtrack.us."
@@ -103,16 +114,54 @@ class Bill
     end
   end
   
+  # statistics functions
+  
+  def self.bills_sponsored(legislator)
+    Bill.count :conditions => {
+      :sponsor_id => legislator.govtrack_id,
+      :chamber => legislator.chamber,
+      :session => current_session.to_s,
+      :type => {'House' => 'h', 'Senate' => 's'}[legislator.chamber]
+    }
+  end
+  
+  def self.bills_cosponsored(legislator)
+    Bill.count :conditions => {
+      :cosponsor_ids => legislator.govtrack_id,
+      :chamber => legislator.chamber,
+      :session => current_session.to_s,
+      :type => {'House' => 'h', 'Senate' => 's'}[legislator.chamber]
+    }
+  end
+  
+  def self.resolutions_sponsored(legislator)
+    Bill.count :conditions => {
+      :sponsor_id => legislator.govtrack_id,
+      :chamber => legislator.chamber,
+      :session => current_session.to_s,
+      :type => {"$in" => {'House' => ['hc', 'hr', 'hj'], 'Senate' => ['sc', 'sr', 'sj']}[legislator.chamber]}
+    }
+  end
+  
+  def self.resolutions_cosponsored(legislator)
+    Bill.count :conditions => {
+      :cosponsor_ids => legislator.govtrack_id,
+      :chamber => legislator.chamber,
+      :session => current_session.to_s,
+      :type => {"$in" => {'House' => ['hc', 'hr', 'hj'], 'Senate' => ['sc', 'sr', 'sj']}[legislator.chamber]}
+    }
+  end
+  
   def self.format_time(time)
     time.strftime "%Y/%m/%d %H:%M:%S %z"
   end
   
-  def self.title_for(doc)
+  def self.short_title_for(doc)
     titles = doc.search "//title[@type='short']"
     titles.any? ? titles.last.inner_text : nil
   end
   
-  def self.description_for(doc)
+  def self.official_title_for(doc)
     titles = doc.search "//title[@type='official']"
     titles.any? ? titles.last.inner_text : nil
   end
