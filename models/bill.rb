@@ -23,12 +23,16 @@ class Bill
   
   def self.fields
     {
-      :basic => [:govtrack_id, :type, :session, :chamber, :created_at, :updated_at, :state],
+      :basic => [:govtrack_id, :type, :code, :session, :chamber, :created_at, :updated_at, :state],
       :info => [:short_title, :official_title, :description, :introduced_at],
-      :extended => [:summary],
+      :summary => [:summary],
       :sponsorships => [:sponsor, :cosponsors],
       :sponsorship_ids => [:sponsor_id, :cosponsor_ids]
     }
+  end
+  
+  def self.search(query, fields)
+    Bill.all :conditions => {:code => query.upcase}, :fields => fields, :limit => 20
   end
   
   def self.update

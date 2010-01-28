@@ -4,28 +4,47 @@ require 'rubygems'
 require 'sinatra'
 require 'environment'
 
-get /^\/(#{models.join '|'})(?:\.json)?$/ do
-  response['Content-Type'] = 'application/json'
+get /^\/(#{models.join '|'})\.json$/ do
   model = params[:captures][0].camelize.constantize
   
-  sections = params[:sections] ? (params[:sections] || '').split(',') + [:basic] : model.fields.keys
-  fields = sections.uniq.map {|section| model.fields[section.to_sym]}.flatten.compact
-  document = model.first :conditions => {model.search_key => params[model.search_key]}, :fields => fields
-  
-  if document
-    json document, params[:callback]
-  else
+  unless document = model.first(
+      :conditions => {model.search_key => params[model.search_key]}, 
+      :fields => fields_for(model, params))
     raise Sinatra::NotFound, "#{model} not found"
   end
+  
+  json model, attributes_for(document), params[:callback]
 end
 
-def json(document, callback = nil)
-  model = document.class
-  attributes = document.attributes
-  attributes.delete :_id
+get /^\/bills\.json$/ do
+  bills = Bill.search params[:q], fields_for(Bill, params)
+  
+  json Bill, bills.map {|bill| attributes_for bill}, params[:callback]
+end
+
+
+
+def json(model, object, callback = nil)
+  response['Content-Type'] = 'application/json'
+  
+  key = model.to_s.underscore
+  key = key.pluralize if object.is_a?(Array)
+  
   json = {
-    model.to_s.underscore => attributes, 
+    key => object,
     :sections => model.fields.keys.sort_by {|x, y| x == :basic ? -1 : x.to_s <=> y.to_s}
   }.to_json
+  
   callback ? "#{callback}(#{json});" : json
+end
+  
+def fields_for(model, params)
+  sections = params[:sections] ? (params[:sections] || '').split(',') + [:basic] : model.fields.keys
+  sections.uniq.map {|section| model.fields[section.to_sym]}.flatten.compact
+end
+
+def attributes_for(document)
+  attributes = document.attributes
+  attributes.delete :_id
+  attributes
 end
