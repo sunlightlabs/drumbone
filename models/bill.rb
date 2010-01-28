@@ -24,7 +24,7 @@ class Bill
   def self.fields
     {
       :basic => [:govtrack_id, :type, :code, :session, :chamber, :created_at, :updated_at, :state],
-      :info => [:short_title, :official_title, :description, :introduced_at],
+      :info => [:short_title, :official_title, :introduced_at],
       :summary => [:summary],
       :sponsorships => [:sponsor, :cosponsors],
       :sponsorship_ids => [:sponsor_id, :cosponsor_ids]
@@ -46,7 +46,12 @@ class Bill
     if system("rsync -az govtrack.us::govtrackdata/us/#{session}/bills/ data/govtrack/#{session}/bills/")
       
       bills = Dir.glob "data/govtrack/#{session}/bills/*.xml"
+      
+      # debug helpers
       # bills = bills.first 20
+      # govtrack_id = "h1399"
+      # bills = bills.select {|b| b == "data/govtrack/111/bills/#{govtrack_id}.xml"}
+      
       bills.each do |path|
         doc = Hpricot open(path)
         
