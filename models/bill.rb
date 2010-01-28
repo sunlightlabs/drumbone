@@ -184,20 +184,24 @@ class Bill
       :h => 'House',
       :hr => 'House',
       :hj => 'House',
-      :sj => 'Senate',
       :hc => 'House',
-      :s => 'Senate'
+      :s => 'Senate',
+      :sr => 'Senate',
+      :sj => 'Senate',
+      :sc => 'Senate'
     }[type.to_sym] || 'Unknown'
   end
   
   def self.code_for(type)
     {
-      :h => 'HR',
-      :hr => 'HRES',
-      :hj => 'HJRES',
-      :sj => 'SJRES',
-      :hc => 'HCRES',
-      :s => 'S'
+      :h => 'hr',
+      :hr => 'hres',
+      :hj => 'hjres',
+      :hc => 'hcres',
+      :s => 's',
+      :sr => 'sres',
+      :sj => 'sjres',
+      :sc => 'scres'
     }[type.to_sym] || 'Unknown'
   end
 end
