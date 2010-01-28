@@ -13,6 +13,7 @@ class Bill
   ensure_index :session
   ensure_index :sponsor_id
   ensure_index :cosponsor_ids
+  ensure_index :keywords
   
   timestamps!
   
@@ -26,6 +27,7 @@ class Bill
       :basic => [:govtrack_id, :type, :code, :session, :chamber, :created_at, :updated_at, :state],
       :info => [:short_title, :official_title, :introduced_at],
       :summary => [:summary],
+      :keywords => [:keywords],
       :sponsorships => [:sponsor, :cosponsors],
       :sponsorship_ids => [:sponsor_id, :cosponsor_ids]
     }
@@ -49,7 +51,7 @@ class Bill
       
       # debug helpers
       # bills = bills.first 20
-      # govtrack_id = "h1399"
+      # govtrack_id = "h3200"
       # bills = bills.select {|b| b == "data/govtrack/111/bills/#{govtrack_id}.xml"}
       
       bills.each do |path|
@@ -78,6 +80,7 @@ class Bill
           :introduced_at => Time.at(doc.at(:introduced)['date'].to_i),
           :short_title => short_title_for(doc),
           :official_title => official_title_for(doc),
+          :keywords => doc.search('//subjects/term').map {|term| term['name']},
           :summary => doc.at(:summary).inner_text,
           :sponsor => sponsor,
           :sponsor_id => sponsor ? sponsor[:govtrack_id] : nil,
