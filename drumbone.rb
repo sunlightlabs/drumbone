@@ -4,11 +4,12 @@ require 'rubygems'
 require 'sinatra'
 require 'environment'
 
+
 get /^\/(legislator|bill)\.json$/ do
   model = params[:captures][0].camelize.constantize
   
   unless document = model.first(
-      :conditions => conditions_for(model, params), 
+      :conditions => conditions_for(model.unique_keys, params), 
       :fields => fields_for(model, params))
     raise Sinatra::NotFound, "#{model} not found"
   end
@@ -17,11 +18,15 @@ get /^\/(legislator|bill)\.json$/ do
 end
 
 get /^\/bills\.json$/ do
-  bills = Bill.search params[:q], fields_for(Bill, params)
+  bills = Bill.all(
+    :conditions => conditions_for(Bill.search_keys, params).merge(:session => Bill.current_session.to_s), 
+    :fields => fields_for(Bill, params),
+    :limit => params[:per_page] || 20,
+    :order => "introduced_at DESC"
+  )
   
   json Bill, bills.map {|bill| attributes_for bill}, params[:callback]
 end
-
 
 
 def json(model, object, callback = nil)
@@ -38,11 +43,12 @@ def json(model, object, callback = nil)
   callback ? "#{callback}(#{json});" : json
 end
 
-def conditions_for(model, params)
-  model.unique_keys.each do |key|
+
+def conditions_for(keys, params)
+  keys.each do |key|
     return {key => params[key].downcase} if params[key]
   end
-  {model.unique_keys.first => nil} # default
+  {keys.first => nil} # default
 end
 
 def fields_for(model, params)

@@ -11,6 +11,7 @@ class Bill
   ensure_index :govtrack_id
   ensure_index :chamber
   ensure_index :session
+  ensure_index :introduced_at
   ensure_index :sponsor_id
   ensure_index :cosponsor_ids
   ensure_index :keywords
@@ -22,10 +23,13 @@ class Bill
     [:govtrack_id, :code]
   end
   
+  def self.search_keys
+    [:sponsor_id, :cosponsor_ids, :chamber]
+  end
+  
   def self.fields
     {
-      :basic => [:govtrack_id, :type, :code, :session, :chamber, :created_at, :updated_at, :state],
-      :info => [:short_title, :official_title, :introduced_at],
+      :basic => [:govtrack_id, :type, :code, :session, :chamber, :created_at, :updated_at, :state, :short_title, :official_title, :introduced_at],
       :summary => [:summary],
       :keywords => [:keywords],
       :sponsorships => [:sponsor, :cosponsors],
@@ -189,15 +193,15 @@ class Bill
   
   def self.chamber_for(type)
     {
-      :h => 'House',
-      :hr => 'House',
-      :hj => 'House',
-      :hc => 'House',
-      :s => 'Senate',
-      :sr => 'Senate',
-      :sj => 'Senate',
-      :sc => 'Senate'
-    }[type.to_sym] || 'Unknown'
+      :h => 'house',
+      :hr => 'house',
+      :hj => 'house',
+      :hc => 'house',
+      :s => 'senate',
+      :sr => 'senate',
+      :sj => 'senate',
+      :sc => 'senate'
+    }[type.to_sym]
   end
   
   def self.code_for(type)
@@ -210,6 +214,6 @@ class Bill
       :sr => 'sres',
       :sj => 'sjres',
       :sc => 'scres'
-    }[type.to_sym] || 'Unknown'
+    }[type.to_sym]
   end
 end
