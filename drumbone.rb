@@ -18,10 +18,13 @@ get /^\/(legislator|bill)\.json$/ do
 end
 
 get /^\/bills\.json$/ do
+  #p((params[:page] || 1) - 1 ) * (params[:per_page] || 20))
+  
   bills = Bill.all(
     :conditions => conditions_for(Bill.search_keys, params).merge(:session => Bill.current_session.to_s), 
     :fields => fields_for(Bill, params),
-    :limit => params[:per_page] || 20,
+    :limit => (params[:per_page] || 20).to_i,
+    :offset => ((params[:page] || 1).to_i - 1 ) * (params[:per_page] || 20).to_i,
     :order => "introduced_at DESC"
   )
   
