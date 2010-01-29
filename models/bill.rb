@@ -37,10 +37,6 @@ class Bill
     }
   end
   
-  def self.search(query, fields)
-    Bill.all :conditions => {:code => query.downcase}, :fields => fields, :limit => 20
-  end
-  
   def self.update
     session = Bill.current_session
     count = 0
