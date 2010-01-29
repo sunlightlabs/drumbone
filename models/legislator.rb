@@ -1,6 +1,5 @@
-# Models must support four class level methods:
+# Models must support a couple class level methods:
 #
-# search_key: returns the search key used to look up an entity.
 # fields: returns a hash of keys to sections of fields. 
 #   :basic must be supported, and should contain all database keys and needed identifiers, including timestamps.
 #   
@@ -23,8 +22,8 @@ class Legislator
   
   timestamps!
   
-  def self.search_key
-    :bioguide_id
+  def self.unique_keys
+    [:bioguide_id, :govtrack_id]
   end
   
   # basic fields will always be returned as part of the JSON response

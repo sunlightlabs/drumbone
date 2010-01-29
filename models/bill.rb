@@ -18,8 +18,8 @@ class Bill
   timestamps!
   
   
-  def self.search_key
-    :govtrack_id
+  def self.unique_keys
+    [:govtrack_id, :code]
   end
   
   def self.fields
@@ -34,7 +34,7 @@ class Bill
   end
   
   def self.search(query, fields)
-    Bill.all :conditions => {:code => query.upcase}, :fields => fields, :limit => 20
+    Bill.all :conditions => {:code => query.downcase}, :fields => fields, :limit => 20
   end
   
   def self.update
