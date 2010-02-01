@@ -31,8 +31,8 @@ class Roll
     {
       :basic => [:roll_id, :chamber, :session, :result, :bill_id, :voted_at, :created_at, :updated_at],
       :extended => [:type, :question, :required, :ayes, :nays, :not_voting, :present],
-#       :vote_ids => [:vote_ids],
-#       :votes => [:votes],
+      :voter_ids => [:voter_ids],
+      :voters => [:voters],
       :bill => [:bill]
     }
   end
@@ -69,6 +69,7 @@ class Roll
       end
       
       bill_id = bill_id_for doc
+      voter_ids, voters = votes_for doc
       
       roll.attributes = {
         :chamber => doc.root['where'],
@@ -83,8 +84,11 @@ class Roll
         :nays => doc.root['nay'],
         :not_voting => doc.root['nv'],
         :present => doc.root['present'],
-        :bill => bill_for(bill_id)
+        :bill => bill_for(bill_id),
+        :voter_ids => voter_ids,
+        :voters => voters
       }
+      
       roll.save
       
       count += 1
@@ -106,6 +110,35 @@ class Roll
     if bill
       attributes = bill.attributes
       attributes.delete :_id
+      attributes
+    else
+      nil
+    end
+  end
+  
+  def self.votes_for(doc)
+    voter_ids = []
+    voters = []
+    
+    doc.search("//voter").each do |elem|
+      vote = elem['vote']
+      value = elem['value']
+      govtrack_id = elem['id']
+      legislator = 
+      
+      voter_ids << {:vote => vote, :voter_id => govtrack_id}
+      voters << {:vote => vote, :voter => voter_for(govtrack_id)}
+    end
+    
+    [voter_ids, voters.compact]
+  end
+  
+  def self.voter_for(govtrack_id)
+    legislator = Legislator.first :conditions => {:govtrack_id => govtrack_id}, :fields => [:first_name, :nickname, :last_name, :name_suffix, :title, :govtrack_id, :bioguide_id]
+    
+    if legislator
+      attributes = legislator.attributes
+      [:_id, :created_at, :updated_at, :chamber, :in_office].each {|a| attributes.delete a}
       attributes
     else
       nil
