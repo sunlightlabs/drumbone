@@ -29,7 +29,7 @@ class Legislator
   # basic fields will always be returned as part of the JSON response
   def self.fields
     {:basic => [:created_at, :updated_at, :bioguide_id, :govtrack_id, :chamber, :in_office],
-     :extended => [:first_name, :nickname, :last_name, :state, :district, :party, :title, :gender,:phone, :website, :twitter_id, :youtube_url],
+     :extended => [:first_name, :nickname, :last_name, :name_suffix, :state, :district, :party, :title, :gender, :phone, :website, :twitter_id, :youtube_url],
      :statistics => [:bills_sponsored, :bills_cosponsored, :resolutions_sponsored, :resolutions_cosponsored]
     }
   end
@@ -122,6 +122,7 @@ class Legislator
       :first_name => api_legislator.firstname,
       :nickname => api_legislator.nickname,
       :last_name => api_legislator.lastname,
+      :name_suffix => api_legislator.name_suffix,
       :state => api_legislator.state,
       :district => api_legislator.district,
       :party => api_legislator.party,
