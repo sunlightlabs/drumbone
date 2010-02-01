@@ -10,7 +10,7 @@ get /^\/(legislator|bill)\.json$/ do
   
   unless document = model.first(
       :conditions => conditions_for(model.unique_keys, params), 
-      :fields => fields_for(model, params))
+      :fields => fields_for(model, params[:sections]))
     raise Sinatra::NotFound, "#{model} not found"
   end
   
@@ -21,7 +21,7 @@ get /^\/bills\.json$/ do
   bills = Bill.all(
     :conditions => conditions_for(Bill.search_keys, params).
       merge(:session => (params[:session] || Bill.current_session.to_s)), 
-    :fields => fields_for(Bill, params),
+    :fields => fields_for(Bill, params[:sections]),
     :limit => (params[:per_page] || 20).to_i,
     :offset => ((params[:page] || 1).to_i - 1 ) * (params[:per_page] || 20).to_i,
     :order => "introduced_at DESC"
@@ -48,14 +48,14 @@ end
 
 def conditions_for(keys, params)
   keys.each do |key|
-    return {key => params[key].downcase} if params[key]
+    return {key => params[key]} if params[key]
   end
   {keys.first => nil} # default
 end
 
-def fields_for(model, params)
-  sections = params[:sections] ? (params[:sections] || '').split(',') + [:basic] : model.fields.keys
-  sections.uniq.map {|section| model.fields[section.to_sym]}.flatten.compact
+def fields_for(model, sections)
+  keys = sections ? (sections || '').split(',') + [:basic] : model.fields.keys
+  keys.uniq.map {|section| model.fields[section.to_sym]}.flatten.compact
 end
 
 def attributes_for(document)
