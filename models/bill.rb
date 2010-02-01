@@ -168,12 +168,12 @@ class Bill
     
     if legislator
       attributes = legislator.attributes
-      attributes.delete :_id
+      [:_id, :created_at, :updated_at, :chamber, :in_office].each {|a| attributes.delete a}
       attributes
     else
       # log problem: missing govtrack_id
       # puts "Missing govtrack_id: #{govtrack_id}"
-      missing_ids << govtrack_id
+      missing_ids << govtrack_id if missing_ids
       nil
     end
   end
