@@ -51,4 +51,8 @@ class Report
     file 'WARNING', source, message, objects
   end
   
+  def self.latest(model, size = 1)
+    rs = Report.all :conditions => {:source => model.to_s}, :order => "created_at DESC", :limit => size
+    size > 1 ? rs : rs.first
+  end
 end
