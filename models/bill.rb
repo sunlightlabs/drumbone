@@ -21,7 +21,6 @@ class Bill
   ensure_index :keywords
   ensure_index :last_action_at
   ensure_index :last_vote_at
-  ensure_index :signed_at
   ensure_index :enacted_at
   
   timestamps!
@@ -144,12 +143,6 @@ class Bill
   def self.enacted_at_for(doc)
     if enacted = doc.at('//actions/enacted')
       Time.at enacted['date'].to_i
-    end
-  end
-  
-  def self.signed_at_for(doc)
-    if signed = doc.at('//actions/signed')
-      Time.at signed['date'].to_i
     end
   end
   
