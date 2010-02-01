@@ -38,7 +38,7 @@ class Bill
   def self.fields
     {
       :basic => [:govtrack_id, :type, :code, :session, :chamber, :created_at, :updated_at, :state],
-      :extended =>  [:short_title, :official_title, :introduced_at, :last_action_at, :last_vote_at, :signed_at, :enacted_at],
+      :extended =>  [:short_title, :official_title, :introduced_at, :last_action_at, :last_vote_at, :enacted_at],
       :summary => [:summary],
       :keywords => [:keywords],
       :actions => [:actions],
@@ -103,8 +103,7 @@ class Bill
         :actions => actions,
         :last_action_at => actions ? actions.last[:acted_at] : nil,
         :last_vote_at => last_vote_at_for(doc),
-        :enacted_at => enacted_at_for(doc),
-        :signed_at => signed_at_for(doc)
+        :enacted_at => enacted_at_for(doc)
       }
       
       bill.save
