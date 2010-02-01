@@ -63,7 +63,7 @@ class Bill
     
     # debug helpers
     # bills = bills.first 20
-    # govtrack_id = "h2997"
+    # govtrack_id = "h4474"
     # bills = bills.select {|b| b == "data/govtrack/111/bills/#{govtrack_id}.xml"}
     
     bills.each do |path|
@@ -164,7 +164,7 @@ class Bill
   end
   
   def self.legislator_for(govtrack_id, missing_ids)
-    legislator = Legislator.first :conditions => {:govtrack_id => govtrack_id}, :fields => Legislator.fields[:basic] + Legislator.fields[:bio]
+    legislator = Legislator.first :conditions => {:govtrack_id => govtrack_id}, :fields => Legislator.fields[:basic] + Legislator.fields[:extended]
     
     if legislator
       attributes = legislator.attributes
