@@ -33,7 +33,7 @@ class Roll
       :extended => [:type, :question, :required, :ayes, :nays, :not_voting, :present],
 #       :vote_ids => [:vote_ids],
 #       :votes => [:votes],
-#       :bill => [:bill]
+      :bill => [:bill]
     }
   end
 
@@ -50,9 +50,11 @@ class Roll
     end
     
     rolls = Dir.glob "data/govtrack/#{session}/rolls/*.xml"
+    
+    # Debug helpers
     # rolls = rolls.first 20
-    # roll_id = "h12-111"
-    # rolls = rolls.select {|roll| roll == "data/govtrack/#{session}/rolls/#{roll_id}.xml"
+    # roll_id = "h2010-22"
+    # rolls = rolls.select {|roll| roll == "data/govtrack/#{session}/rolls/#{roll_id}.xml"}
     
     rolls.each do |path|
       doc = Hpricot::XML open(path)
@@ -60,17 +62,19 @@ class Roll
       roll_id = File.basename path, '.xml'
       
       if roll = Roll.first(:conditions => {:roll_id => roll_id})
-        puts "[Roll #{roll_id}] About to be updated"
+        # puts "[Roll #{roll_id}] About to be updated"
       else
         roll = Roll.new :roll_id => roll_id
-        puts "[Roll #{roll_id}] About to be created"
+        # puts "[Roll #{roll_id}] About to be created"
       end
+      
+      bill_id = bill_id_for doc
       
       roll.attributes = {
         :chamber => doc.root['where'],
         :session => session,
         :result => doc.at(:result).inner_text,
-        :bill_id => bill_id_for(doc),
+        :bill_id => bill_id,
         :voted_at => Time.at(doc.root['when'].to_i),
         :type => doc.at(:type).inner_text,
         :question => doc.at(:question).inner_text,
@@ -78,7 +82,8 @@ class Roll
         :ayes => doc.root['aye'],
         :nays => doc.root['nay'],
         :not_voting => doc.root['nv'],
-        :present => doc.root['present'] 
+        :present => doc.root['present'],
+        :bill => bill_for(bill_id)
       }
       roll.save
       
@@ -92,6 +97,18 @@ class Roll
   def self.bill_id_for(doc)
     if bill = doc.at(:bill)
       "#{bill['type']}#{bill['number']}-#{bill['session']}"
+    end
+  end
+  
+  def self.bill_for(bill_id)
+    bill = Bill.first :conditions => {:govtrack_id => bill_id}, :fields => Bill.fields[:basic] + Bill.fields[:extended]
+    
+    if bill
+      attributes = bill.attributes
+      attributes.delete :_id
+      attributes
+    else
+      nil
     end
   end
 end
