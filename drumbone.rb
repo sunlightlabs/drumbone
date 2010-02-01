@@ -5,7 +5,7 @@ require 'sinatra'
 require 'environment'
 
 
-get /^\/(legislator|bill)\.json$/ do
+get /^\/(legislator|bill|roll)\.json$/ do
   model = params[:captures][0].camelize.constantize
   
   unless document = model.first(
