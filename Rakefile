@@ -11,6 +11,7 @@ task :update => :environment do
     # written out explicitly because order matters
     Legislator.update
     Bill.update
+    Roll.update
     
     Legislator.update_statistics
   end
