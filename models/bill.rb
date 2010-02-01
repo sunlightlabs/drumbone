@@ -77,7 +77,7 @@ class Bill
         # puts "[Bill #{bill.govtrack_id}] About to be updated"
       else
         bill = Bill.new :govtrack_id => govtrack_id
-        #puts "[Bill #{bill.govtrack_id}] About to be created"
+        # puts "[Bill #{bill.govtrack_id}] About to be created"
       end
       
       sponsor = sponsor_for doc, missing_ids
