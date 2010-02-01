@@ -71,7 +71,7 @@ class Bill
       
       type = doc.root.attributes['type']
       number = doc.root.attributes['number']
-      govtrack_id = "#{type}#{number}"
+      govtrack_id = "#{type}#{number}-#{session}"
       
       if bill = Bill.first(:conditions => {:govtrack_id => govtrack_id})
         # puts "[Bill #{bill.govtrack_id}] About to be updated"
