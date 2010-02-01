@@ -6,7 +6,37 @@ class Roll
   key :roll_id, String, :required => true
   key :chamber, String, :required => true
   key :session, String, :required => true
+  key :result, String, :required => true
   
+  timestamps!
+  
+  ensure_index :roll_id
+  ensure_index :chamber
+  ensure_index :session
+  ensure_index :type
+  ensure_index :result
+  ensure_index :voted_at
+  ensure_index :type
+  ensure_index :bill_id
+  
+  def self.unique_keys
+    [:roll_id]
+  end
+  
+  def self.search_keys
+    [:bill_id, :chamber]
+  end
+  
+  def self.fields
+    {
+      :basic => [:roll_id, :chamber, :session, :result, :bill_id, :voted_at, :created_at, :updated_at],
+      :extended => [:type, :question, :required, :ayes, :nays, :not_voting, :present],
+#       :vote_ids => [:vote_ids],
+#       :votes => [:votes],
+#       :bill => [:bill]
+    }
+  end
+
   def self.update
     session = Bill.current_session
     count  = 0
@@ -36,13 +66,19 @@ class Roll
         puts "[Roll #{roll_id}] About to be created"
       end
       
-      chamber = doc.root.attributes['where']
-      number = doc.root.attributes['roll']
-      
       roll.attributes = {
-        :chamber => chamber,
-        :number => number,
-        :session => session
+        :chamber => doc.root['where'],
+        :session => session,
+        :result => doc.at(:result).inner_text,
+        :bill_id => bill_id_for(doc),
+        :voted_at => Time.at(doc.root['when'].to_i),
+        :type => doc.at(:type).inner_text,
+        :question => doc.at(:question).inner_text,
+        :required => doc.at(:required).inner_text,
+        :ayes => doc.root['aye'],
+        :nays => doc.root['nay'],
+        :not_voting => doc.root['nv'],
+        :present => doc.root['present'] 
       }
       roll.save
       
@@ -51,5 +87,11 @@ class Roll
     
     Report.success self, "Synced #{count} roll calls for session ##{session} from GovTrack.us.", {:elapsed_time => Time.now - start}
     
+  end
+  
+  def self.bill_id_for(doc)
+    if bill = doc.at(:bill)
+      "#{bill['type']}#{bill['number']}-#{bill['session']}"
+    end
   end
 end
