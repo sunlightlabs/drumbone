@@ -24,7 +24,7 @@ get /^\/bills\.json$/ do
     :fields => fields_for(Bill, params[:sections]),
     :limit => (params[:per_page] || 20).to_i,
     :offset => ((params[:page] || 1).to_i - 1 ) * (params[:per_page] || 20).to_i,
-    :order => "introduced_at DESC"
+    :order => "#{params[:order] || 'introduced_at'} DESC"
   )
   
   json Bill, bills.map {|bill| attributes_for bill}, params[:callback]
@@ -50,7 +50,7 @@ def conditions_for(keys, params)
   keys.each do |key|
     return {key => params[key]} if params[key]
   end
-  {keys.first => nil} # default
+  {}
 end
 
 def fields_for(model, sections)
