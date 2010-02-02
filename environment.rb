@@ -2,6 +2,7 @@ require 'rubygems'
 require 'mongo_mapper'
 
 Dir.glob('models/*.rb').each {|model| load model}
+Dir.glob('sources/*.rb').each {|model| load model}
 
 def models
   @models = Dir.glob('models/*.rb').map do |model|

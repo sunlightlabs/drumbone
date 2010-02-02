@@ -30,7 +30,8 @@ class Legislator
   def self.fields
     {:basic => [:created_at, :updated_at, :bioguide_id, :govtrack_id, :chamber, :in_office],
      :extended => [:first_name, :nickname, :last_name, :name_suffix, :state, :district, :party, :title, :gender, :phone, :website, :twitter_id, :youtube_url],
-     :statistics => [:bills_sponsored, :bills_cosponsored, :resolutions_sponsored, :resolutions_cosponsored]
+     :statistics => [:bills_sponsored, :bills_cosponsored, :resolutions_sponsored, :resolutions_cosponsored],
+     :contracts => [:contracts]
     }
   end
   
@@ -49,6 +50,48 @@ class Legislator
     end
     
     Report.success self, "Updated bill statistics for all active legislators", {:elapsed_time => Time.now - start}
+  end
+  
+  def self.update_contracts
+    fiscal_year = Time.now.year - 1
+    start_time = Time.now
+    
+    count = 0
+    
+    representatives = Legislator.all :conditions => {:chamber => 'House', :in_office => true}
+    senators = Legislator.all :conditions => {:chamber => 'Senate', :in_office => true}
+    
+    states = MongoMapper.connection.db('drumbone').collection(:legislators).distinct :state
+    state_totals = {}
+    
+    states.each do |state|
+      #puts "[#{state}] Storing contractor totals"
+      
+      state_totals[state] = UsaSpending.totals_for_state fiscal_year, state
+    end
+    
+    senators.each do |senator|
+      #puts "[#{senator.bioguide_id}] Updating contracts for #{senator.title}. #{senator.last_name}"
+      
+      senator.attributes = {:contracts => state_totals[senator.state].merge(:fiscal_year => fiscal_year)}
+      senator.save
+      
+      count += 1
+    end
+    
+    representatives.each do |representative|
+      #puts "[#{representative.bioguide_id}] Updating contracts for #{representative.title}. #{representative.last_name}"
+      
+      totals = UsaSpending.totals_for_district fiscal_year, representative.state, representative.district
+      representative.attributes = {:contracts => totals.merge(:fiscal_year => fiscal_year)}
+      representative.save
+      
+      count += 1
+    end
+    
+    Report.success self, "Updated #{count} legislators with contract data from USASpending.gov", {:elapsed_time => Time.now - start_time}
+  rescue Exception => ex
+    Report.failure self, "Exception while fetching contract data from USASpending.gov, error attached", {:exception => ex.inspect}
   end
   
   def self.update

@@ -14,6 +14,7 @@ task :update => :environment do
     Roll.update
     
     Legislator.update_statistics
+    Legislator.update_contracts
   end
 end
 
