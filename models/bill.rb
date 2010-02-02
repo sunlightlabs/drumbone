@@ -58,7 +58,14 @@ class Bill
       Report.failure self, "Couldn't rsync to Govtrack.us."
       return
     end
-      
+    
+    # make lookups faster later by caching a hash of legislators from which we can lookup govtrack_ids
+    legislators = {}
+    Legislator.all(:fields => [:first_name, :nickname, :last_name, :name_suffix, :title, :govtrack_id, :bioguide_id]).each do |legislator|
+      legislators[legislator.govtrack_id] = legislator
+    end
+    
+    
     bills = Dir.glob "data/govtrack/#{session}/bills/*.xml"
     
     # debug helpers
@@ -80,8 +87,8 @@ class Bill
         # puts "[Bill #{bill.govtrack_id}] About to be created"
       end
       
-      sponsor = sponsor_for doc, missing_ids
-      cosponsors = cosponsors_for doc, missing_ids
+      sponsor = sponsor_for doc, legislators, missing_ids
+      cosponsors = cosponsors_for doc, legislators, missing_ids
       actions = actions_for doc
       
       bill.attributes = {
@@ -119,14 +126,14 @@ class Bill
     end
   end
   
-  def self.sponsor_for(doc, missing_ids)
+  def self.sponsor_for(doc, legislators, missing_ids)
     sponsor = doc.at :sponsor
-    sponsor and sponsor['id'] ? legislator_for(sponsor['id'], missing_ids) : nil
+    sponsor and sponsor['id'] ? legislator_for(sponsor['id'], legislators, missing_ids) : nil
   end
   
-  def self.cosponsors_for(doc, missing_ids)
+  def self.cosponsors_for(doc, legislators, missing_ids)
     cosponsors = (doc/:cosponsor).map do |cosponsor| 
-      cosponsor and cosponsor['id'] ? legislator_for(cosponsor['id'], missing_ids) : nil
+      cosponsor and cosponsor['id'] ? legislator_for(cosponsor['id'], legislators, missing_ids) : nil
     end.compact
     cosponsors.any? ? cosponsors : nil
   end
@@ -164,16 +171,14 @@ class Bill
     titles.any? ? titles.last.inner_text : nil
   end
   
-  def self.legislator_for(govtrack_id, missing_ids)
-    legislator = Legislator.first :conditions => {:govtrack_id => govtrack_id}, :fields => Legislator.fields[:basic] + Legislator.fields[:extended]
+  def self.legislator_for(govtrack_id, legislators, missing_ids)
+    legislator = legislators[govtrack_id]
     
     if legislator
       attributes = legislator.attributes
       [:_id, :created_at, :updated_at, :chamber, :in_office].each {|a| attributes.delete a}
       attributes
     else
-      # log problem: missing govtrack_id
-      # puts "Missing govtrack_id: #{govtrack_id}"
       missing_ids << govtrack_id if missing_ids
       nil
     end
