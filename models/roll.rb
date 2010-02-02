@@ -51,6 +51,14 @@ class Roll
     
     rolls = Dir.glob "data/govtrack/#{session}/rolls/*.xml"
     
+    
+    # make lookups faster later by caching a hash of legislators from which we can lookup govtrack_ids
+    legislators = {}
+    Legislator.all(:fields => [:first_name, :nickname, :last_name, :name_suffix, :title, :govtrack_id, :bioguide_id]).each do |legislator|
+      legislators[legislator.govtrack_id] = legislator
+    end
+    
+    
     # Debug helpers
     # rolls = rolls.first 20
     # roll_id = "h2010-22"
@@ -69,7 +77,7 @@ class Roll
       end
       
       bill_id = bill_id_for doc
-      voter_ids, voters = votes_for doc
+      voter_ids, voters = votes_for doc, legislators
       
       roll.attributes = {
         :chamber => doc.root['where'],
@@ -116,7 +124,7 @@ class Roll
     end
   end
   
-  def self.votes_for(doc)
+  def self.votes_for(doc, legislators)
     voter_ids = []
     voters = []
     
@@ -124,17 +132,17 @@ class Roll
       vote = elem['vote']
       value = elem['value']
       govtrack_id = elem['id']
-      legislator = 
+      voter = voter_for govtrack_id, legislators
       
       voter_ids << {:vote => vote, :voter_id => govtrack_id}
-      voters << {:vote => vote, :voter => voter_for(govtrack_id)}
+      voters << {:vote => vote, :voter => voter}
     end
     
     [voter_ids, voters.compact]
   end
   
-  def self.voter_for(govtrack_id)
-    legislator = Legislator.first :conditions => {:govtrack_id => govtrack_id}, :fields => [:first_name, :nickname, :last_name, :name_suffix, :title, :govtrack_id, :bioguide_id]
+  def self.voter_for(govtrack_id, legislators)
+    legislator = legislators[govtrack_id]
     
     if legislator
       attributes = legislator.attributes
