@@ -71,8 +71,7 @@ class Bill
     
     # debug helpers
     # bills = bills.first 20
-    # govtrack_id = "h4474"
-    # bills = bills.select {|b| b == "data/govtrack/111/bills/#{govtrack_id}.xml"}
+    # bills = bills.select {|b| b == "data/govtrack/111/bills/h2110.xml"}
     
     bills.each do |path|
       doc = Hpricot::XML open(path)
@@ -129,12 +128,12 @@ class Bill
   
   def self.sponsor_for(doc, legislators, missing_ids)
     sponsor = doc.at :sponsor
-    sponsor and sponsor['id'] ? legislator_for(sponsor['id'], legislators, missing_ids) : nil
+    sponsor and sponsor['id'] and !sponsor['withdrawn'] ? legislator_for(sponsor['id'], legislators, missing_ids) : nil
   end
   
   def self.cosponsors_for(doc, legislators, missing_ids)
     cosponsors = (doc/:cosponsor).map do |cosponsor| 
-      cosponsor and cosponsor['id'] ? legislator_for(cosponsor['id'], legislators, missing_ids) : nil
+      cosponsor and cosponsor['id'] and !cosponsor['withdrawn'] ? legislator_for(cosponsor['id'], legislators, missing_ids) : nil
     end.compact
     cosponsors.any? ? cosponsors : nil
   end
