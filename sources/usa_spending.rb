@@ -4,7 +4,7 @@ class UsaSpending
   BASE_URL = "http://www.usaspending.gov/fpds/fpds.php"
   
   def self.totals_for_state(year, state)
-    totals_from url(year, :state, state)
+    totals_from url(year, :stateCode, state)
   end
   
   def self.totals_for_district(year, state, district)
