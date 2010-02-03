@@ -61,7 +61,7 @@ class Bill
     
     # make lookups faster later by caching a hash of legislators from which we can lookup govtrack_ids
     legislators = {}
-    Legislator.all(:fields => [:first_name, :nickname, :last_name, :name_suffix, :title, :govtrack_id, :bioguide_id]).each do |legislator|
+    Legislator.all(:fields => [:first_name, :nickname, :last_name, :name_suffix, :title, :state, :party, :govtrack_id, :bioguide_id]).each do |legislator|
       legislators[legislator.govtrack_id] = legislator
     end
     
