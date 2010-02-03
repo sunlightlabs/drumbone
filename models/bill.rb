@@ -41,7 +41,8 @@ class Bill
       :summary => [:summary],
       :keywords => [:keywords],
       :actions => [:actions],
-      :sponsorships => [:sponsor, :cosponsors],
+      :sponsor => [:sponsor],
+      :cosponsors => [:cosponsors],
       :sponsorship_ids => [:sponsor_id, :cosponsor_ids]
     }
   end
