@@ -27,7 +27,7 @@ class Bill
   
   
   def self.unique_keys
-    [:govtrack_id, :code]
+    [:govtrack_id]
   end
   
   def self.search_keys
