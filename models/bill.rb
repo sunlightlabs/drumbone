@@ -36,7 +36,7 @@ class Bill
   
   def self.fields
     {
-      :basic => [:govtrack_id, :type, :code, :number, :session, :chamber, :created_at, :updated_at, :state],
+      :basic => [:govtrack_id, :type, :code, :number, :session, :chamber, :updated_at, :state],
       :extended =>  [:short_title, :official_title, :introduced_at, :last_action_at, :last_vote_at, :enacted_at],
       :summary => [:summary],
       :keywords => [:keywords],
