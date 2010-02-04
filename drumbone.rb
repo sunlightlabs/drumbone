@@ -6,8 +6,7 @@ require 'environment'
 
 
 before do
-  
-  halt 403 unless ApiKey.allowed?(params[:apikey])
+  halt 403 unless ApiKey.allowed?(params[:apikey] || request.env['HTTP_X_APIKEY'])
   response['Content-Type'] = 'application/json'
 end
 
