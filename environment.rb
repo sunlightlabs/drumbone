@@ -34,6 +34,16 @@ class ApiKey
   end
 end
 
+class Hit
+  include MongoMapper::Document
+  
+  key :method, String, :required => true
+  key :key, String, :required => true
+  key :sections, Array
+  key :format, String
+  timestamps!
+end
+
 class Report
   include MongoMapper::Document
   

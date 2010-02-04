@@ -6,10 +6,18 @@ require 'environment'
 
 # require API keys
 before do
-  halt 403, 'API key required, you can obtain one from http://services.sunlightlabs.com/accounts/register/' unless ApiKey.allowed?(params[:apikey] || request.env['HTTP_X_APIKEY'])
+  @key = params[:apikey] || request.env['HTTP_X_APIKEY']
+  halt 403, 'API key required, you can obtain one from http://services.sunlightlabs.com/accounts/register/' unless ApiKey.allowed? @key
 end
 
-get /^\/(legislator|bill|roll)\.json$/ do
+def make_hit(params, key)
+  sections = (params[:sections] || '').split ','
+  method = params[:captures][0]
+  format = params[:captures][1]
+  Hit.new(:key => key, :sections => sections, :method => method, :format => format).save
+end
+
+get /^\/(legislator|bill|roll)\.(json)$/ do
   model = params[:captures][0].camelize.constantize
   fields = fields_for Bill, params[:sections]
   
@@ -19,10 +27,12 @@ get /^\/(legislator|bill|roll)\.json$/ do
     raise Sinatra::NotFound, "#{model} not found"
   end
   
+  make_hit params, @key
+  
   json model, attributes_for(document, fields), params[:callback]
 end
 
-get /^\/bills\.json$/ do
+get /^\/(bills)\.(json)$/ do
   fields = fields_for Bill, params[:sections]
   
   bills = Bill.all(
@@ -33,6 +43,8 @@ get /^\/bills\.json$/ do
     :offset => ((params[:page] || 1).to_i - 1 ) * (params[:per_page] || 20).to_i,
     :order => "#{params[:order] || 'introduced_at'} DESC"
   )
+  
+  make_hit params, @key
   
   json Bill, bills.map {|bill| attributes_for bill, fields}, params[:callback]
 end
