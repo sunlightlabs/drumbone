@@ -23,6 +23,16 @@ configure do
   MongoMapper.ensure_indexes!
 end
 
+class ApiKey
+  include MongoMapper::Document
+  
+  key :key, String, :required => true, :index => true
+  timestamps!
+  
+  def self.allowed?(key)
+    ApiKey.exists? :key => key
+  end
+end
 
 class Report
   include MongoMapper::Document

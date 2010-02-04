@@ -5,6 +5,16 @@ require 'sinatra'
 require 'environment'
 
 
+before do
+  
+  halt 403 unless ApiKey.allowed?(params[:apikey])
+  response['Content-Type'] = 'application/json'
+end
+
+error 403 do
+  'API key required, you can obtain one from http://services.sunlightlabs.com/accounts/register/'
+end
+
 get /^\/(legislator|bill|roll)\.json$/ do
   model = params[:captures][0].camelize.constantize
   fields = fields_for Bill, params[:sections]
@@ -35,8 +45,6 @@ end
 
 
 def json(model, object, callback = nil)
-  response['Content-Type'] = 'application/json'
-  
   key = model.to_s.underscore
   key = key.pluralize if object.is_a?(Array)
   
