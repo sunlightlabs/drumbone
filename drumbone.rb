@@ -24,7 +24,7 @@ end
 
 get /^\/(legislator|bill|roll)\.(json)$/ do
   model = params[:captures][0].camelize.constantize
-  fields = fields_for Bill, params[:sections]
+  fields = fields_for model, params[:sections]
   
   unless document = model.first(
       :conditions => conditions_for(model.unique_keys, params), 
