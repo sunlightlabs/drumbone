@@ -26,3 +26,25 @@ end
 def api_key
   params[:apikey] || request.env['HTTP_X_APIKEY']
 end
+
+
+class ApiKey
+  include MongoMapper::Document
+  
+  key :key, String, :required => true, :index => true
+  timestamps!
+  
+  def self.allowed?(key)
+    ApiKey.exists? :key => key
+  end
+end
+
+class Hit
+  include MongoMapper::Document
+  
+  key :method, String, :required => true
+  key :key, String, :required => true
+  key :sections, Array
+  key :format, String
+  timestamps!
+end
