@@ -3,7 +3,7 @@
 require 'rubygems'
 require 'sinatra'
 require 'environment'
-require 'api'
+
 
 get /^\/(legislator|bill|roll)\.(json)$/ do
   model = params[:captures][0].camelize.constantize
