@@ -3,24 +3,7 @@
 require 'rubygems'
 require 'sinatra'
 require 'environment'
-
-# require API keys
-before do
-  @key = params[:apikey] || request.env['HTTP_X_APIKEY']
-  halt 403, 'API key required, you can obtain one from http://services.sunlightlabs.com/accounts/register/' unless ApiKey.allowed? @key
-end
-
-def make_hit(params, key)
-  attributes = {
-    :sections => (params[:sections] || '').split(','),
-    :method => params[:captures][0],
-    :format => params[:captures][1],
-    :key => @key
-  }
-  Hit.create! attributes
-rescue
-  Report.failure "Drumbone", "Error logging a hit, attributes and URL attached.", {:hit => attributes, :url => request.env['REQUEST_URI']}
-end
+require 'api'
 
 get /^\/(legislator|bill|roll)\.(json)$/ do
   model = params[:captures][0].camelize.constantize
@@ -31,8 +14,6 @@ get /^\/(legislator|bill|roll)\.(json)$/ do
       :fields => fields)
     raise Sinatra::NotFound, "#{model} not found"
   end
-  
-  make_hit params, @key
   
   json model, attributes_for(document, fields), params[:callback]
 end
@@ -48,8 +29,6 @@ get /^\/(bills)\.(json)$/ do
     :offset => ((params[:page] || 1).to_i - 1 ) * (params[:per_page] || 20).to_i,
     :order => "#{params[:order] || 'introduced_at'} DESC"
   )
-  
-  make_hit params, @key
   
   json Bill, bills.map {|bill| attributes_for bill, fields}, params[:callback]
 end

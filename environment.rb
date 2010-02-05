@@ -4,6 +4,8 @@ require 'mongo_mapper'
 Dir.glob('models/*.rb').each {|model| load model}
 Dir.glob('sources/*.rb').each {|model| load model}
 
+set :public, '.'
+
 def models
   @models = Dir.glob('models/*.rb').map do |model|
     File.basename model, File.extname(model)
@@ -13,6 +15,7 @@ end
 def config
   @config ||= YAML.load_file 'config/config.yml'
 end
+
 
 configure do
   Sunlight::Base.api_key = config[:sunlight_api_key]
