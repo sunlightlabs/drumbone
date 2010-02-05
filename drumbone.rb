@@ -11,10 +11,15 @@ before do
 end
 
 def make_hit(params, key)
-  sections = (params[:sections] || '').split ','
-  method = params[:captures][0]
-  format = params[:captures][1]
-  Hit.new(:key => key, :sections => sections, :method => method, :format => format).save
+  attributes = {
+    :sections => (params[:sections] || '').split(','),
+    :method => params[:captures][0],
+    :format => params[:captures][1],
+    :key => @key
+  }
+  Hit.create! attributes
+rescue
+  Report.failure "Drumbone", "Error logging a hit, attributes and URL attached.", {:hit => attributes, :url => request.env['REQUEST_URI']}
 end
 
 get /^\/(legislator|bill|roll)\.(json)$/ do
