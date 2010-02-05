@@ -23,9 +23,9 @@ after "deploy:update_code", "deploy:shared_links"
 desc "Run the update command for a given model"
 task :update, :roles => :app, :except => { :no_release => true } do
   if ENV['model']
-    run "cd #{current_path} && rake update model=#{ENV['model']}"
+    run "cd #{current_path} && rake update:manual model=#{ENV['model']}"
   else
-    run "cd #{current_path} && rake update"
+    run "cd #{current_path} && rake update:all"
   end
 end
 
