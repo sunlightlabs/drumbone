@@ -23,7 +23,7 @@ after do
   end
 end
 
-get '/api/create_key/' do
+post '/api/create_key/' do
   begin
     ApiKey.create! :key => params[:key],
         :email => params[:email],
@@ -33,7 +33,7 @@ get '/api/create_key/' do
   end
 end
 
-get '/api/update_key/' do
+post '/api/update_key/' do
   if key = ApiKey.first(:conditions => {:key => params[:key]})
     begin
       key.update_attributes! :email => params[:email], :status => params[:status]
@@ -45,7 +45,7 @@ get '/api/update_key/' do
   end
 end
 
-get '/api/update_key_by_email/' do
+post '/api/update_key_by_email/' do
   if key = ApiKey.first(:conditions => {:email => params[:email]})
     begin
       key.update_attributes! :key => params[:key], :status => params[:status]
@@ -78,7 +78,7 @@ class ApiKey
   timestamps!
   
   def self.allowed?(key)
-    ApiKey.exists? :key => key
+    ApiKey.exists? :key => key, :status => 'A'
   end
 end
 
