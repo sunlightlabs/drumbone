@@ -26,7 +26,8 @@ namespace :report do
   
   desc "Report analytics to the central API analytics department."
   task :analytics => :environment do
-    day = ENV['day'] || Time.now.strftime("%Y-%m-%d")
+    # default to yesterday
+    day = ENV['day'] || (Time.now.midnight - 1.day).strftime("%Y-%m-%d")
     
     start_time = Time.now
     
@@ -63,7 +64,7 @@ namespace :report do
       Report.failure 'Analytics', "Sanity check failed: error calculating hit reports. Reports attached.", {:reports => reports}
     end
     
-    Report.success 'Analytics', "Filed #{reports.size} reports for #{day}.", {:elapsed_time => (Time.now - start_time)}
+    Report.success 'Analytics', "Filed #{reports.size} report(s) for #{day}.", {:elapsed_time => (Time.now - start_time)}
   end
   
 end
