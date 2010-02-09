@@ -1,4 +1,8 @@
-:sunlight_api_key: 
+:sunlight_api_key: # fill in
 :database:
   :host: localhost
   :database: drumbone
+  
+:services:
+  :shared_secret: # fill in
+  :api_name: drumbone

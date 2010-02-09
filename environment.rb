@@ -8,16 +8,18 @@ Dir.glob('sources/*.rb').each {|model| load model}
 
 set :public, '.'
 
+def config
+  @config ||= YAML.load_file 'config/config.yml'
+end
+
 configure do
-  @config = YAML.load_file 'config/config.yml'
-  Sunlight::Base.api_key = @config[:sunlight_api_key]
+  Sunlight::Base.api_key = config[:sunlight_api_key]
   
-  MongoMapper.connection = @config[:database][:hostname]
-  MongoMapper.database = @config[:database][:database]
+  MongoMapper.connection = config[:database][:hostname]
+  MongoMapper.database = config[:database][:database]
   
   MongoMapper.ensure_indexes!
 end
-
 
 class Report
   include MongoMapper::Document
