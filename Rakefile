@@ -22,6 +22,41 @@ namespace :update do
   end
 end
 
+namespace :report do
+  
+  desc "Report analytics to the central API analytics department."
+  task :analytics => :environment do
+    if ENV['day']
+      start = Time.parse ENV['day']
+    else
+      start = Time.now.midnight
+    end
+    
+    finish = start + 1.day
+    conditions = {:created_at => {"$gte" => start, "$lt" => finish}}
+    
+    reports = []
+    
+    # get down to the driver level for the iteration
+    hits = MongoMapper.connection.db('drumbone').collection('hits')
+    
+    keys = hits.distinct :key, conditions
+    keys.each do |key|
+      methods = hits.distinct :method, conditions.merge(:key => key)
+      methods.each do |method|
+        count = Hit.count conditions.merge(:key => key, :method => method)
+        reports << {:key => key, :method => method, :count => count}
+      end
+    end
+    
+    if reports.map {|r| r[:count]}.sum == Hit.count(conditions)
+      p reports
+    else
+      puts "Sanity check failed: error calculating hit report."
+    end
+  end
+  
+end
 
 task :environment do
   require 'drumbone'
