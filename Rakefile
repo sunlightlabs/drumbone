@@ -26,12 +26,11 @@ namespace :report do
   
   desc "Report analytics to the central API analytics department."
   task :analytics => :environment do
-    if ENV['day']
-      start = Time.parse ENV['day']
-    else
-      start = Time.now.midnight
-    end
+    day = ENV['day'] || Time.now.strftime("%Y-%m-%d")
     
+    start_time = Time.now
+    
+    start = Time.parse day
     finish = start + 1.day
     conditions = {:created_at => {"$gte" => start, "$lt" => finish}}
     
@@ -50,10 +49,21 @@ namespace :report do
     end
     
     if reports.map {|r| r[:count]}.sum == Hit.count(conditions)
-      p reports
+      api_name = config[:services][:api_name]
+      shared_secret = config[:services][:shared_secret]
+      
+      reports.each do |report|
+        begin
+          SunlightServices.report(report[:key], report[:method], report[:count], day, api_name, shared_secret)
+        rescue Exception => exception
+          Report.failure 'Analytics', "Problem filing a report, error and report data attached", {:exception => exception, :report => report, :day => day}
+        end
+      end
     else
-      puts "Sanity check failed: error calculating hit report."
+      Report.failure 'Analytics', "Sanity check failed: error calculating hit reports. Reports attached.", {:reports => reports}
     end
+    
+    Report.success 'Analytics', "Filed #{reports.size} reports for #{day}.", {:elapsed_time => (Time.now - start_time)}
   end
   
 end

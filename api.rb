@@ -1,20 +1,28 @@
 require 'cgi'
 require 'hmac-sha1'
 
-# Require an API key
+# Accept the API key through the query string or the x-apikey header
+def api_key
+  params[:apikey] || request.env['HTTP_X_APIKEY']
+end
+
 before do
+  # verify signature and parameters
   if request.path_info =~ /^\/api\//
-    halt 403, 'Bad signature' unless verify params
+    unless SunlightServices.verify params, config[:services][:shared_secret], config[:services][:api_name]
+      halt 403, 'Bad signature' 
+    end
   else
+    # Require an API key
     unless ApiKey.allowed? api_key
       halt 403, 'API key required, you can obtain one from http://services.sunlightlabs.com/accounts/register/'
     end
   end
 end
 
-# If we delivered a request, log the hit for analytics purposes
 after do
   unless request.path_info =~ /^\/api\//
+    # log hits
     if params[:captures]
       Hit.create(
         :sections => (params[:sections] || '').split(','),
@@ -32,7 +40,7 @@ post '/api/create_key/' do
         :email => params[:email],
         :status => params[:status]
   rescue
-    halt 403, "Could not create key, errors: #{key.errors.full_messages.join ', '}"
+    halt 403, "Could not create key, duplicate key or email"
   end
 end
 
@@ -60,30 +68,36 @@ post '/api/update_key_by_email/' do
   end
 end
 
-def verify(params)
-  return false unless params[:key] and params[:email] and params[:status]
-  return false unless params[:api] == config[:services][:api_name]
+class SunlightServices
   
-  shared_secret = config[:services][:shared_secret]
-  given_signature = params.delete 'signature'
-  signature = signature_for params, shared_secret
+  def self.report(key, endpoint, calls, date, api, shared_secret)
+    url = URI.parse "http://services.sunlightlabs.com/analytics/report_calls/"
+    
+    params = {:key => key, :endpoint => endpoint, :date => date, :api => api, :calls => calls}
+    signature = signature_for params, shared_secret
+                              
+    Net::HTTP.post_form url, params.merge(:signature => signature)
+  end
   
-  signature == given_signature
-end
+  def self.verify(params, shared_secret, api_name)
+    return false unless params[:key] and params[:email] and params[:status]
+    return false unless params[:api] == api_name
+    
+    given_signature = params.delete 'signature'
+    signature = signature_for params, shared_secret
+    
+    signature == given_signature
+  end
 
-def signature_for(params, shared_secret)
-  HMAC::SHA1.hexdigest shared_secret, signature_string(params)
-end
+  def self.signature_for(params, shared_secret)
+    HMAC::SHA1.hexdigest shared_secret, signature_string(params)
+  end
 
-def signature_string(params)
-  params.keys.map(&:to_s).sort.map do |key|
-    "#{key}=#{CGI.escape params[key]}"
-  end.join '&'
-end
-
-# Accept the API key through the query string or the x-apikey header
-def api_key
-  params[:apikey] || request.env['HTTP_X_APIKEY']
+  def self.signature_string(params)
+    params.keys.map(&:to_s).sort.map do |key|
+      "#{key}=#{CGI.escape((params[key] || params[key.to_sym]).to_s)}"
+    end.join '&'
+  end
 end
 
 
