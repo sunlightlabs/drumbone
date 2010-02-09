@@ -8,17 +8,12 @@ end
 # If we delivered a request, log the hit for analytics purposes
 after do
   if params[:captures]
-    attributes = {
+    Hit.create(
       :sections => (params[:sections] || '').split(','),
       :method => params[:captures][0],
       :format => params[:captures][1],
       :key => api_key
-    }
-    begin
-      Hit.create! attributes
-    rescue
-      Report.failure "Drumbone", "Error logging a hit, attributes and URL attached.", {:hit => attributes, :url => request.env['REQUEST_URI']}
-    end
+    )
   end
 end
 
