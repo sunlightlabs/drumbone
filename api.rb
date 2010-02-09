@@ -1,3 +1,6 @@
+require 'cgi'
+require 'hmac-sha1'
+
 # Require an API key
 before do
   if request.path_info =~ /^\/api\//
@@ -60,7 +63,22 @@ end
 def verify(params)
   return false unless params[:key] and params[:email] and params[:status]
   return false unless params[:api] == config[:services][:api_name]
-  true
+  
+  shared_secret = config[:services][:shared_secret]
+  given_signature = params.delete 'signature'
+  signature = signature_for params, shared_secret
+  
+  signature == given_signature
+end
+
+def signature_for(params, shared_secret)
+  HMAC::SHA1.hexdigest shared_secret, signature_string(params)
+end
+
+def signature_string(params)
+  params.keys.map(&:to_s).sort.map do |key|
+    "#{key}=#{CGI.escape params[key]}"
+  end.join '&'
 end
 
 # Accept the API key through the query string or the x-apikey header
