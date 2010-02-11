@@ -1,12 +1,6 @@
 require 'rubygems'
+require 'sunlight'
 require 'mongo_mapper'
-
-require 'api'
-
-Dir.glob('models/*.rb').each {|model| load model}
-Dir.glob('sources/*.rb').each {|model| load model}
-
-set :public, '.'
 
 def config
   @config ||= YAML.load_file 'config/config.yml'
@@ -15,11 +9,18 @@ end
 configure do
   Sunlight::Base.api_key = config[:sunlight_api_key]
   
-  MongoMapper.connection = config[:database][:hostname]
+  MongoMapper.connection = Mongo::Connection.new config[:database][:hostname]
   MongoMapper.database = config[:database][:database]
   
-  MongoMapper.ensure_indexes!
+  set :public, '.'
 end
+
+
+require 'api'
+
+Dir.glob('models/*.rb').each {|model| load model}
+Dir.glob('sources/*.rb').each {|model| load model}
+
 
 class Report
   include MongoMapper::Document
