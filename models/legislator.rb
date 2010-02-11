@@ -120,7 +120,7 @@ class Legislator
     end
     
     old_legislators.each do |legislator|
-      legislator.update_attribute :in_office, false
+      legislator.update_attributes :in_office => false
       # puts "[Legislator #{legislator.bioguide_id}] Marked Inactive"
       inactive_count += 1
     end
