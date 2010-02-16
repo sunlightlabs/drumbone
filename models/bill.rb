@@ -47,6 +47,10 @@ class Bill
     }
   end
   
+  def self.sponsor_fields
+    [:first_name, :nickname, :last_name, :name_suffix, :title, :state, :party, :govtrack_id, :bioguide_id]
+  end
+  
   def self.update
     session = Bill.current_session
     count = 0
@@ -62,16 +66,18 @@ class Bill
     
     # make lookups faster later by caching a hash of legislators from which we can lookup govtrack_ids
     legislators = {}
-    Legislator.all(:fields => [:first_name, :nickname, :last_name, :name_suffix, :title, :state, :party, :govtrack_id, :bioguide_id]).each do |legislator|
+    Legislator.all(:fields => sponsor_fields).each do |legislator|
       legislators[legislator.govtrack_id] = legislator
     end
     
     
+    
     bills = Dir.glob "data/govtrack/#{session}/bills/*.xml"
+    # bills = Dir.glob "data/govtrack/#{session}/bills/h3200.xml"
     
     # debug helpers
     # bills = bills.first 20
-    # bills = bills.select {|b| b == "data/govtrack/111/bills/h2110.xml"}
+    
     
     bills.each do |path|
       doc = Hpricot::XML open(path)
@@ -102,7 +108,7 @@ class Bill
         :short_title => short_title_for(doc),
         :official_title => official_title_for(doc),
         :keywords => doc.search('//subjects/term').map {|term| term['name']},
-        :summary => doc.at(:summary).inner_text,
+        :summary => summary_for(doc),
         :sponsor => sponsor,
         :sponsor_id => sponsor ? sponsor[:govtrack_id] : nil,
         :cosponsors => cosponsors,
@@ -124,6 +130,11 @@ class Bill
       missing_ids = missing_ids.uniq
       Report.warning self, "Found #{missing_ids.size} missing GovTrack IDs, attached.", {:missing_ids => missing_ids}
     end
+  end
+  
+  def self.summary_for(doc)
+    summary = doc.at(:summary).inner_text.strip
+    summary.present? ? summary : nil
   end
   
   def self.sponsor_for(doc, legislators, missing_ids)
