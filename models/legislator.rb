@@ -49,7 +49,7 @@ class Legislator
       legislator.save
     end
     
-    Report.success self, "Updated bill statistics for all active legislators", {:elapsed_time => Time.now - start}
+    Report.success "Statistics", "Updated bill statistics for all active legislators", {:elapsed_time => Time.now - start}
   end
   
   def self.update_contracts
@@ -89,9 +89,9 @@ class Legislator
       count += 1
     end
     
-    Report.success self, "Updated #{count} legislators with contract data from USASpending.gov", {:elapsed_time => Time.now - start_time}
+    Report.success "Contracts", "Updated #{count} legislators with contract data from USASpending.gov", {:elapsed_time => Time.now - start_time}
   rescue Exception => ex
-    Report.failure self, "Exception while fetching contract data from USASpending.gov, error attached", {:exception => ex.inspect}
+    Report.failure "Contracts", "Exception while fetching contract data from USASpending.gov, error attached", {:exception => ex.inspect}
   end
   
   def self.update
