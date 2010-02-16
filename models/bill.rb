@@ -187,7 +187,8 @@ class Bill
     
     if legislator
       attributes = legislator.attributes
-      [:_id, :created_at, :updated_at, :chamber, :in_office].each {|a| attributes.delete a}
+      allowed_keys = sponsor_fields.map {|f| f.to_s}
+      attributes.keys.each {|key| attributes.delete key unless allowed_keys.include?(key)}
       attributes
     else
       missing_ids << govtrack_id if missing_ids
