@@ -36,8 +36,11 @@ class Report
   def self.file(status, source, message, objects = {})
     report = Report.new :source => source.to_s, :status => status, :message => message
     report.attributes = objects
-    puts report.to_s
     report.save
+    
+    puts report.to_s
+    send_email report if ['FAILURE', 'WARNING'].include?(status.to_s)
+    
     report
   end
   
@@ -46,13 +49,11 @@ class Report
   end
   
   def self.failure(source, message, objects = {})
-    report = file 'FAILURE', source, message, objects
-    send_email report
+    file 'FAILURE', source, message, objects
   end
   
   def self.warning(source, message, objects = {})
-    report = file 'WARNING', source, message, objects
-    send_email report
+    file 'WARNING', source, message, objects
   end
   
   def self.latest(model, size = 1)
