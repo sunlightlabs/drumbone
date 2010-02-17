@@ -1,4 +1,5 @@
 :sunlight_api_key: # fill in
+
 :database:
   :host: localhost
   :database: drumbone
@@ -6,3 +7,18 @@
 :services:
   :shared_secret: # fill in
   :api_name: drumbone
+
+# these get fed directly to Pony, can be anything Pony understands
+# :subject and :body should get set in the code on a per-email basis
+:email:
+  :via: smtp
+  :to: 
+    - # an array of email addresses
+  :from: 
+  :smtp:
+    :host: 
+    :port: 25
+    :user: 
+    :password: 
+    :auth: plain
+    :domain: 
