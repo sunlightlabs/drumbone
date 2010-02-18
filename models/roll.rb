@@ -36,6 +36,14 @@ class Roll
       :bill => [:bill]
     }
   end
+  
+  def self.voter_fields
+    [:first_name, :nickname, :last_name, :name_suffix, :title, :state, :party, :govtrack_id, :bioguide_id]
+  end
+  
+  def self.bill_fields
+    Bill.fields[:basic] + Bill.fields[:extended]
+  end
 
   def self.update
     session = Bill.current_session
@@ -49,8 +57,6 @@ class Roll
       return
     end
     
-    rolls = Dir.glob "data/govtrack/#{session}/rolls/*.xml"
-    
     
     # make lookups faster later by caching a hash of legislators from which we can lookup govtrack_ids
     legislators = {}
@@ -60,9 +66,9 @@ class Roll
     
     
     # Debug helpers
+    rolls = Dir.glob "data/govtrack/#{session}/rolls/*.xml"
+    # rolls = Dir.glob "data/govtrack/#{session}/rolls/h2010-22.xml"
     # rolls = rolls.first 20
-    # roll_id = "h2010-22"
-    # rolls = rolls.select {|roll| roll == "data/govtrack/#{session}/rolls/#{roll_id}.xml"}
     
     rolls.each do |path|
       doc = Hpricot::XML open(path)
@@ -108,16 +114,17 @@ class Roll
   
   def self.bill_id_for(doc)
     if bill = doc.at(:bill)
-      "#{bill['type']}#{bill['number']}-#{bill['session']}"
+      bill_id = "#{Bill.type_for bill['type']}#{bill['number']}-#{bill['session']}"
     end
   end
   
   def self.bill_for(bill_id)
-    bill = Bill.first :conditions => {:govtrack_id => bill_id}, :fields => Bill.fields[:basic] + Bill.fields[:extended]
+    bill = Bill.first :conditions => {:bill_id => bill_id}, :fields => bill_fields
     
     if bill
       attributes = bill.attributes
-      attributes.delete :_id
+      allowed_keys = bill_fields.map {|f| f.to_s}
+      attributes.keys.each {|key| attributes.delete key unless allowed_keys.include?(key)}
       attributes
     else
       nil
@@ -134,7 +141,7 @@ class Roll
       govtrack_id = elem['id']
       voter = voter_for govtrack_id, legislators
       
-      voter_ids << {:vote => vote, :voter_id => govtrack_id}
+      voter_ids << {:vote => vote, :voter_id => voter[:bioguide_id]}
       voters << {:vote => vote, :voter => voter}
     end
     
@@ -146,7 +153,8 @@ class Roll
     
     if legislator
       attributes = legislator.attributes
-      [:_id, :created_at, :updated_at, :chamber, :in_office].each {|a| attributes.delete a}
+      allowed_keys = voter_fields.map {|f| f.to_s}
+      attributes.keys.each {|key| attributes.delete key unless allowed_keys.include?(key)}
       attributes
     else
       nil
