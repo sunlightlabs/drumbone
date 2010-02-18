@@ -3,14 +3,14 @@ require 'hpricot'
 class Bill
   include MongoMapper::Document
   
-  key :govtrack_id, String, :required => true
+  key :bill_id, String, :required => true
   key :type, String, :required => true
   key :code, String, :required => true
   key :chamber, String, :required => true
   key :session, String, :required => true
   key :state, String, :required => true
   
-  ensure_index :govtrack_id
+  ensure_index :bill_id
   ensure_index :type
   ensure_index :code
   ensure_index :chamber
@@ -27,7 +27,7 @@ class Bill
   
   
   def self.unique_keys
-    [:govtrack_id]
+    [:bill_id]
   end
   
   def self.search_keys
@@ -36,7 +36,7 @@ class Bill
   
   def self.fields
     {
-      :basic => [:govtrack_id, :type, :code, :number, :session, :chamber, :updated_at, :state],
+      :basic => [:bill_id, :type, :code, :number, :session, :chamber, :updated_at, :state],
       :extended =>  [:short_title, :official_title, :introduced_at, :last_action_at, :last_vote_at, :enacted_at],
       :summary => [:summary],
       :keywords => [:keywords],
@@ -82,15 +82,17 @@ class Bill
     bills.each do |path|
       doc = Hpricot::XML open(path)
       
-      type = doc.root.attributes['type']
+      type = type_for doc.root.attributes['type']
       number = doc.root.attributes['number']
-      govtrack_id = "#{type}#{number}-#{session}"
+      code = "#{type}#{number}"
       
-      if bill = Bill.first(:conditions => {:govtrack_id => govtrack_id})
-        # puts "[Bill #{bill.govtrack_id}] About to be updated"
+      bill_id = "#{code}-#{session}"
+      
+      if bill = Bill.first(:conditions => {:bill_id => bill_id})
+        # puts "[Bill #{bill.bill_id}] About to be updated"
       else
-        bill = Bill.new :govtrack_id => govtrack_id
-        # puts "[Bill #{bill.govtrack_id}] About to be created"
+        bill = Bill.new :bill_id => bill_id
+        # puts "[Bill #{bill.bill_id}] About to be created"
       end
       
       sponsor = sponsor_for doc, legislators, missing_ids
@@ -100,7 +102,7 @@ class Bill
       bill.attributes = {
         :type => type,
         :number => number,
-        :code => "#{code_for(type)}#{number}",
+        :code => code,
         :session => session,
         :chamber => chamber_for(type),
         :state => doc.at(:state).inner_text,
@@ -255,7 +257,7 @@ class Bill
     }[type.to_sym]
   end
   
-  def self.code_for(type)
+  def self.type_for(type)
     {
       :h => 'hr',
       :hr => 'hres',

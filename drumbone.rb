@@ -5,25 +5,46 @@ require 'sinatra'
 require 'environment'
 
 
-get /^\/(legislator|bill|roll)\.(json)$/ do
-  model = params[:captures][0].camelize.constantize
-  fields = fields_for model, params[:sections]
+
+get /^\/(legislator)\.(json)$/ do
+  fields = fields_for Legislator, params[:sections]
+  conditions = conditions_for Legislator.unique_keys, params
   
-  unless document = model.first(
-      :conditions => conditions_for(model.unique_keys, params), 
-      :fields => fields)
-    raise Sinatra::NotFound, "#{model} not found"
+  unless legislator = Legislator.first(:conditions => conditions, :fields => fields)
+    halt 404, "Legislator not found by that ID"
   end
   
-  json model, attributes_for(document, fields), params[:callback]
+  json Legislator, attributes_for(legislator, fields), params[:callback]
+end
+
+get /^\/(bill)\.(json)$/ do
+  fields = fields_for Bill, params[:sections]
+  conditions = conditions_for Bill.unique_keys, params
+  
+  unless bill = Bill.first(:conditions => conditions, :fields => fields)
+    raise Sinatra::NotFound, "Bill not found"
+  end
+  
+  json Bill, attributes_for(bill, fields), params[:callback]
+end
+
+get /^\/(roll)\.(json)$/ do
+  fields = fields_for Roll, params[:sections]
+  conditions = conditions_for Roll.unique_keys, params
+  
+  unless roll = Roll.first(:conditions => conditions, :fields => fields)
+    raise Sinatra::NotFound, "Roll call not found"
+  end
+  
+  json Roll, attributes_for(roll, fields), params[:callback]
 end
 
 get /^\/(bills)\.(json)$/ do
   fields = fields_for Bill, params[:sections]
+  conditions = conditions_for Bill.search_keys, params
   
   bills = Bill.all({
-    :conditions => conditions_for(Bill.search_keys, params).
-      merge(:session => (params[:session] || Bill.current_session.to_s)), 
+    :conditions => conditions.merge(:session => (params[:session] || Bill.current_session.to_s)), 
     :fields => fields,
     :order => "#{params[:order] || 'introduced_at'} DESC"
   }.merge(pagination_for(params)))
@@ -33,9 +54,10 @@ end
 
 get /^\/(rolls)\.(json)$/ do
   fields = fields_for Roll, params[:sections]
+  conditions = conditions_for Roll.search_keys, params
   
   rolls = Roll.all({
-    :conditions => conditions_for(Roll.search_keys, params),
+    :conditions => conditions,
     :fields => fields,
     :order => "#{params[:order] || 'voted_at'} DESC"
   }.merge(pagination_for(params)))
