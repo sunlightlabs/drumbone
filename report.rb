@@ -52,6 +52,12 @@ class Report
   end
   
   def to_s
-    "[#{status}] #{source}#{elapsed_time ? " [#{elapsed_time} sec]" : ""}\n    #{message}"
+    "[#{status}] #{source}#{elapsed_time ? " [#{to_minutes elapsed_time.to_i}]" : ""}\n    #{message}"
+  end
+  
+  def to_minutes(seconds)
+    min = seconds / 60
+    sec = seconds % 60
+    "#{min > 0 ? "#{min}m, " : ""}#{sec}s"
   end
 end

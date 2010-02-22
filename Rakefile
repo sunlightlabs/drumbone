@@ -25,7 +25,7 @@ end
 namespace :report do
   
   desc "See reports for a given day (default to last night)"
-  task :day => :environment do
+  task :daily => :environment do
     # default to today (since we run at past midnight)
     day = ENV['day'] || Time.now.midnight.strftime("%Y-%m-%d")
     
