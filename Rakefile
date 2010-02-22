@@ -33,16 +33,21 @@ namespace :report do
     finish = start + 1.day
     conditions = {:created_at => {"$gte" => start, "$lt" => finish}}
     
+    puts "\nReports for #{day}:\n\n"
+    
     Report.all(conditions).each do |report|
-      puts report.to_s
+      puts "#{report}\n\n"
     end
   end
   
   desc "See latest failed reports (defaults to 5)"
-  task :failures => :environment do
+  task :failure => :environment do
     limit = ENV['n'] || 5
+    
+    puts "Latest #{limit} failures:\n\n"
+    
     Report.all(:order => "created_at DESC", :limit => 5, :status => "FAILURE").each do |report|
-      puts "#{report.created_at.strftime "%Y-%m-%d"} - #{report}"
+      puts "(#{report.created_at.strftime "%Y-%m-%d"}) #{report}\n\n"
     end
   end
 end

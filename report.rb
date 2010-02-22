@@ -52,6 +52,6 @@ class Report
   end
   
   def to_s
-    "[#{source}] #{status}: #{message}#{elapsed_time ? " (Elapsed: #{elapsed_time} sec)" : ""}"
+    "[#{status}] #{source}#{elapsed_time ? " [#{elapsed_time} sec]" : ""}\n    #{message}"
   end
 end
