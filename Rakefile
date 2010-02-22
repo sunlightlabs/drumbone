@@ -37,11 +37,14 @@ namespace :report do
       puts report.to_s
     end
   end
-#   
-#   desc "See latest failed reports (defaults to 5)"
-#   task :failures => :environment do
-#     
-#   end
+  
+  desc "See latest failed reports (defaults to 5)"
+  task :failures => :environment do
+    limit = ENV['n'] || 5
+    Report.all(:order => "created_at DESC", :limit => 5, :status => "FAILURE").each do |report|
+      puts "#{report.created_at.strftime "%Y-%m-%d"} - #{report}"
+    end
+  end
 end
 
 namespace :api do
