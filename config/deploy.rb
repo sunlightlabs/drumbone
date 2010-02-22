@@ -43,6 +43,13 @@ namespace :report do
     command += " n=#{ENV['n']}" if ENV['n']
     run command
   end
+  
+  desc "See what would get sent for analytics for a given day"
+  task :analytics, :roles => :app, :except => {:no_release => true} do
+    command = "cd #{current_path} && rake api:analytics test=1"
+    command += " day=\"#{ENV['day']}\"" if ENV['day']
+    run command
+  end
 end
 
 namespace :deploy do

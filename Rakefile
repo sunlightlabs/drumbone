@@ -58,6 +58,7 @@ namespace :api do
   task :analytics => :environment do
     # default to yesterday
     day = ENV['day'] || (Time.now.midnight - 1.day).strftime("%Y-%m-%d")
+    test = !ENV['test'].nil?
     
     start_time = Time.now
     
@@ -85,7 +86,7 @@ namespace :api do
       
       reports.each do |report|
         begin
-          SunlightServices.report(report[:key], report[:method], report[:count], day, api_name, shared_secret)
+          SunlightServices.report(report[:key], report[:method], report[:count], day, api_name, shared_secret) unless test
         rescue Exception => exception
           Report.failure 'Analytics', "Problem filing a report, error and report data attached", {:exception => exception, :report => report, :day => day}
         end
@@ -94,7 +95,11 @@ namespace :api do
       Report.failure 'Analytics', "Sanity check failed: error calculating hit reports. Reports attached.", {:reports => reports}
     end
     
-    Report.success 'Analytics', "Filed #{reports.size} report(s) for #{day}.", {:elapsed_time => (Time.now - start_time)}
+    if test
+      puts "\nWould report for #{day}:\n\n#{reports.inspect}\n\n"
+    else
+      Report.success 'Analytics', "Filed #{reports.size} report(s) for #{day}.", {:elapsed_time => (Time.now - start_time)}
+    end
   end
   
 end
