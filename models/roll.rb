@@ -67,8 +67,8 @@ class Roll
     
     
     # Debug helpers
-    # rolls = Dir.glob "data/govtrack/#{session}/rolls/*.xml"
-    rolls = Dir.glob "data/govtrack/#{session}/rolls/h2009-2.xml"
+    rolls = Dir.glob "data/govtrack/#{session}/rolls/*.xml"
+    # rolls = Dir.glob "data/govtrack/#{session}/rolls/h2009-2.xml"
     # rolls = Dir.glob "data/govtrack/#{session}/rolls/s2009-391.xml"
     # rolls = rolls.first 20
     
