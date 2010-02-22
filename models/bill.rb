@@ -37,13 +37,13 @@ class Bill
   def self.fields
     {
       :basic => [:bill_id, :type, :code, :number, :session, :chamber, :updated_at, :state],
-      :extended =>  [:short_title, :official_title, :introduced_at, :last_action_at, :last_vote_at, :enacted_at],
+      :extended =>  [:short_title, :official_title, :introduced_at, :last_action_at, :last_vote_at, :enacted_at, :sponsor_id],
       :summary => [:summary],
       :keywords => [:keywords],
       :actions => [:actions],
       :sponsor => [:sponsor],
       :cosponsors => [:cosponsors],
-      :sponsorship_ids => [:sponsor_id, :cosponsor_ids]
+      :cosponsor_ids => [:cosponsor_ids]
     }
   end
   
@@ -202,8 +202,8 @@ class Bill
   
   def self.bills_sponsored(legislator)
     Bill.count :conditions => {
-      :sponsor_id => legislator.govtrack_id,
-      :chamber => legislator.chamber,
+      :sponsor_id => legislator.bioguide_id,
+      :chamber => legislator.chamber.downcase,
       :session => current_session.to_s,
       :type => {'House' => 'h', 'Senate' => 's'}[legislator.chamber]
     }
@@ -211,8 +211,8 @@ class Bill
   
   def self.bills_cosponsored(legislator)
     Bill.count :conditions => {
-      :cosponsor_ids => legislator.govtrack_id,
-      :chamber => legislator.chamber,
+      :cosponsor_ids => legislator.bioguide_id,
+      :chamber => legislator.chamber.downcase,
       :session => current_session.to_s,
       :type => {'House' => 'h', 'Senate' => 's'}[legislator.chamber]
     }
@@ -220,8 +220,8 @@ class Bill
   
   def self.resolutions_sponsored(legislator)
     Bill.count :conditions => {
-      :sponsor_id => legislator.govtrack_id,
-      :chamber => legislator.chamber,
+      :sponsor_id => legislator.bioguide_id,
+      :chamber => legislator.chamber.downcase,
       :session => current_session.to_s,
       :type => {"$in" => {'House' => ['hc', 'hr', 'hj'], 'Senate' => ['sc', 'sr', 'sj']}[legislator.chamber]}
     }
@@ -229,8 +229,8 @@ class Bill
   
   def self.resolutions_cosponsored(legislator)
     Bill.count :conditions => {
-      :cosponsor_ids => legislator.govtrack_id,
-      :chamber => legislator.chamber,
+      :cosponsor_ids => legislator.bioguide_id,
+      :chamber => legislator.chamber.downcase,
       :session => current_session.to_s,
       :type => {"$in" => {'House' => ['hc', 'hr', 'hj'], 'Senate' => ['sc', 'sr', 'sj']}[legislator.chamber]}
     }
