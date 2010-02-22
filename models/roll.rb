@@ -30,8 +30,8 @@ class Roll
   def self.fields
     {
       :basic => [:roll_id, :chamber, :session, :result, :bill_id, :voted_at, :updated_at],
-      :extended => [:type, :question, :required, :ayes, :nays, :not_voting, :present],
-      :party_breakdown => [:party_breakdown],
+      :extended => [:type, :question, :required, :vote_breakdown],
+      :party_breakdown => [:party_vote_breakdown],
       :voter_ids => [:voter_ids],
       :voters => [:voters],
       :bill => [:bill]
@@ -67,8 +67,9 @@ class Roll
     
     
     # Debug helpers
-    rolls = Dir.glob "data/govtrack/#{session}/rolls/*.xml"
-    # rolls = Dir.glob "data/govtrack/#{session}/rolls/h2009-2.xml"
+    # rolls = Dir.glob "data/govtrack/#{session}/rolls/*.xml"
+    rolls = Dir.glob "data/govtrack/#{session}/rolls/h2009-2.xml"
+    # rolls = Dir.glob "data/govtrack/#{session}/rolls/s2009-391.xml"
     # rolls = rolls.first 20
     
     rolls.each do |path|
@@ -85,6 +86,8 @@ class Roll
       
       bill_id = bill_id_for doc
       voter_ids, voters = votes_for doc, legislators
+      party_vote_breakdown = vote_breakdown_for voters
+      vote_breakdown = party_vote_breakdown.delete :total
       
       roll.attributes = {
         :chamber => doc.root['where'],
@@ -95,14 +98,11 @@ class Roll
         :type => doc.at(:type).inner_text,
         :question => doc.at(:question).inner_text,
         :required => doc.at(:required).inner_text,
-        :ayes => doc.root['aye'],
-        :nays => doc.root['nay'],
-        :not_voting => doc.root['nv'],
-        :present => doc.root['present'],
         :bill => bill_for(bill_id),
         :voter_ids => voter_ids,
         :voters => voters,
-        :party_breakdown => party_breakdown_for(voters)
+        :vote_breakdown => vote_breakdown,
+        :party_vote_breakdown => party_vote_breakdown
       }
       
       roll.save
@@ -133,11 +133,12 @@ class Roll
     end
   end
   
-  def self.party_breakdown_for(voters)
+  def self.vote_breakdown_for(voters)
     breakdown = {}
     mapping = {'-' => :nays, '+' => :ayes, '0' => :not_voting, 'P' => :present}
     
-    parties = voters.map {|v| v[:voter]['party']}.uniq
+    # keep a tally for every party, and the total
+    parties = voters.map {|v| v[:voter]['party']}.uniq + [:total]
     
     voters.each do |voter|
       unless mapping[voter[:vote]]
@@ -157,6 +158,7 @@ class Roll
       vote = mapping[voter[:vote]]
       
       breakdown[party][vote] += 1
+      breakdown[:total][vote] += 1
     end
     
     breakdown
