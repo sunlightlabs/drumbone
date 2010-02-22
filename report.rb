@@ -58,6 +58,6 @@ class Report
   def to_minutes(seconds)
     min = seconds / 60
     sec = seconds % 60
-    "#{min > 0 ? "#{min}m, " : ""}#{sec}s"
+    "#{min > 0 ? "#{min}m," : ""}#{sec}s"
   end
 end

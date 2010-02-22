@@ -29,6 +29,22 @@ task :update, :roles => :app, :except => { :no_release => true } do
   end
 end
 
+namespace :report do
+  desc "See reports for a given day (default to last night)"
+  task :daily, :roles => :app, :except => {:no_release => true} do
+    command = "cd #{current_path} && rake report:daily"
+    command += " day=\"#{ENV['day']}\"" if ENV['day']
+    run command
+  end
+  
+  desc "See latest failed reports (defaults to 5)"
+  task :failure, :roles => :app, :except => {:no_release => true} do
+    command = "cd #{current_path} && rake report:failure"
+    command += " n=#{ENV['n']}" if ENV['n']
+    run command
+  end
+end
+
 namespace :deploy do
   task :start do ; end
   task :stop do ; end
