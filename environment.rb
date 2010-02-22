@@ -1,7 +1,6 @@
 require 'rubygems'
 require 'sunlight'
 require 'mongo_mapper'
-require 'pony'
 
 def config
   @config ||= YAML.load_file 'config/config.yml'
@@ -18,65 +17,11 @@ end
 
 
 require 'api'
+require 'report'
 
 Dir.glob('models/*.rb').each {|model| load model}
 Dir.glob('sources/*.rb').each {|model| load model}
 
-
-class Report
-  include MongoMapper::Document
-  
-  key :status, String, :required => true
-  key :source, String, :required => true
-  key :message, String
-  
-  timestamps!
-  
-  
-  def self.file(status, source, message, objects = {})
-    report = Report.new :source => source.to_s, :status => status, :message => message
-    report.attributes = objects
-    report.save
-    
-    puts report.to_s
-    send_email report if ['FAILURE', 'WARNING'].include?(status.to_s)
-    
-    report
-  end
-  
-  def self.success(source, message, objects = {})
-    file 'SUCCESS', source, message, objects
-  end
-  
-  def self.failure(source, message, objects = {})
-    file 'FAILURE', source, message, objects
-  end
-  
-  def self.warning(source, message, objects = {})
-    file 'WARNING', source, message, objects
-  end
-  
-  def self.latest(model, size = 1)
-    reports = Report.all :conditions => {:source => model.to_s}, :order => "created_at DESC", :limit => size
-    size > 1 ? reports : reports.first
-  end
-  
-  def self.send_email(report)
-    Pony.mail email.merge(:subject => report.to_s, :body => report.attributes.inspect)
-  end
-  
-  def self.email=(details)
-    @email = details
-  end
-  
-  def self.email
-    @email
-  end
-  
-  def to_s
-    "[#{source}] #{status}: #{message}"
-  end
-end
 
 configure do
   Report.email = config[:email]

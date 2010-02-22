@@ -24,7 +24,29 @@ end
 
 namespace :report do
   
-  desc "Report analytics to the central API analytics department."
+  desc "See reports for a given day (default to last night)"
+  task :day => :environment do
+    # default to today (since we run at past midnight)
+    day = ENV['day'] || Time.now.midnight.strftime("%Y-%m-%d")
+    
+    start = Time.parse day
+    finish = start + 1.day
+    conditions = {:created_at => {"$gte" => start, "$lt" => finish}}
+    
+    Report.all(conditions).each do |report|
+      puts report.to_s
+    end
+  end
+#   
+#   desc "See latest failed reports (defaults to 5)"
+#   task :failures => :environment do
+#     
+#   end
+end
+
+namespace :api do
+  
+  desc "Send analytics to the central API analytics department."
   task :analytics => :environment do
     # default to yesterday
     day = ENV['day'] || (Time.now.midnight - 1.day).strftime("%Y-%m-%d")
