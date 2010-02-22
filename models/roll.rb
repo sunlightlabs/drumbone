@@ -31,7 +31,7 @@ class Roll
     {
       :basic => [:roll_id, :chamber, :session, :result, :bill_id, :voted_at, :updated_at],
       :extended => [:type, :question, :required, :vote_breakdown],
-      :party_breakdown => [:party_vote_breakdown],
+      :party_vote_breakdown => [:party_vote_breakdown],
       :voter_ids => [:voter_ids],
       :voters => [:voters],
       :bill => [:bill]
