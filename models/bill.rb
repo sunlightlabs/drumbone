@@ -55,6 +55,7 @@ class Bill
     session = Bill.current_session
     count = 0
     missing_ids = []
+    bad_bills = []
     
     start = Time.now
     
@@ -77,7 +78,6 @@ class Bill
     
     # debug helpers
     # bills = bills.first 20
-    
     
     bills.each do |path|
       doc = Hpricot::XML open(path)
@@ -104,7 +104,7 @@ class Bill
         :number => number,
         :code => code,
         :session => session,
-        :chamber => chamber_for(type),
+        :chamber => {'h' => 'house', 's' => 'senate'}[type.first.downcase],
         :state => doc.at(:state).inner_text,
         :introduced_at => Time.at(doc.at(:introduced)['date'].to_i),
         :short_title => short_title_for(doc),
@@ -121,9 +121,11 @@ class Bill
         :enacted_at => enacted_at_for(doc)
       }
       
-      bill.save
-      
-      count += 1
+      if bill.save
+        count += 1
+      else
+        bad_bills << {:attributes => bill.attributes, :errors => bill.errors.full_messages}
+      end
     end
     
     Report.success self, "Synced #{count} bills for session ##{session} from GovTrack.us.", {:elapsed_time => Time.now - start}
@@ -131,6 +133,10 @@ class Bill
     if missing_ids.any?
       missing_ids = missing_ids.uniq
       Report.warning self, "Found #{missing_ids.size} missing GovTrack IDs, attached.", {:missing_ids => missing_ids}
+    end
+    
+    if bad_bills.any?
+      Report.failure self, "Failed to save #{bad_bills.size} bills. Attached the last bill's attributes and errors.", bad_bills.last
     end
   end
   
@@ -205,7 +211,7 @@ class Bill
       :sponsor_id => legislator.bioguide_id,
       :chamber => legislator.chamber.downcase,
       :session => current_session.to_s,
-      :type => {'House' => 'h', 'Senate' => 's'}[legislator.chamber]
+      :type => {'House' => 'hr', 'Senate' => 's'}[legislator.chamber]
     }
   end
   
@@ -214,7 +220,7 @@ class Bill
       :cosponsor_ids => legislator.bioguide_id,
       :chamber => legislator.chamber.downcase,
       :session => current_session.to_s,
-      :type => {'House' => 'h', 'Senate' => 's'}[legislator.chamber]
+      :type => {'House' => 'hr', 'Senate' => 's'}[legislator.chamber]
     }
   end
   
@@ -223,7 +229,7 @@ class Bill
       :sponsor_id => legislator.bioguide_id,
       :chamber => legislator.chamber.downcase,
       :session => current_session.to_s,
-      :type => {"$in" => {'House' => ['hc', 'hr', 'hj'], 'Senate' => ['sc', 'sr', 'sj']}[legislator.chamber]}
+      :type => {"$in" => {'House' => ['hcres', 'hres', 'hjres'], 'Senate' => ['scres', 'sres', 'sjres']}[legislator.chamber]}
     }
   end
   
@@ -232,7 +238,7 @@ class Bill
       :cosponsor_ids => legislator.bioguide_id,
       :chamber => legislator.chamber.downcase,
       :session => current_session.to_s,
-      :type => {"$in" => {'House' => ['hc', 'hr', 'hj'], 'Senate' => ['sc', 'sr', 'sj']}[legislator.chamber]}
+      :type => {"$in" => {'House' => ['hcres', 'hres', 'hjres'], 'Senate' => ['scres', 'sres', 'sjres']}[legislator.chamber]}
     }
   end
   
@@ -242,19 +248,6 @@ class Bill
   
   def self.current_session
     ((Time.now.year + 1) / 2) - 894
-  end
-  
-  def self.chamber_for(type)
-    {
-      :h => 'house',
-      :hr => 'house',
-      :hj => 'house',
-      :hc => 'house',
-      :s => 'senate',
-      :sr => 'senate',
-      :sj => 'senate',
-      :sc => 'senate'
-    }[type.to_sym]
   end
   
   def self.type_for(type)
