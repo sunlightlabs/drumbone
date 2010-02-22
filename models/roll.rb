@@ -31,6 +31,7 @@ class Roll
     {
       :basic => [:roll_id, :chamber, :session, :result, :bill_id, :voted_at, :updated_at],
       :extended => [:type, :question, :required, :ayes, :nays, :not_voting, :present],
+      :party_breakdown => [:party_breakdown],
       :voter_ids => [:voter_ids],
       :voters => [:voters],
       :bill => [:bill]
@@ -67,7 +68,7 @@ class Roll
     
     # Debug helpers
     rolls = Dir.glob "data/govtrack/#{session}/rolls/*.xml"
-    # rolls = Dir.glob "data/govtrack/#{session}/rolls/h2010-22.xml"
+    # rolls = Dir.glob "data/govtrack/#{session}/rolls/h2009-2.xml"
     # rolls = rolls.first 20
     
     rolls.each do |path|
@@ -100,7 +101,8 @@ class Roll
         :present => doc.root['present'],
         :bill => bill_for(bill_id),
         :voter_ids => voter_ids,
-        :voters => voters
+        :voters => voters,
+        :party_breakdown => party_breakdown_for(voters)
       }
       
       roll.save
@@ -129,6 +131,35 @@ class Roll
     else
       nil
     end
+  end
+  
+  def self.party_breakdown_for(voters)
+    breakdown = {}
+    mapping = {'-' => :nays, '+' => :ayes, '0' => :not_voting, 'P' => :present}
+    
+    parties = voters.map {|v| v[:voter]['party']}.uniq
+    
+    voters.each do |voter|
+      unless mapping[voter[:vote]]
+        mapping[voter[:vote]] = voter[:vote]
+      end
+    end
+    
+    parties.each do |party| 
+      breakdown[party] = {}
+      mapping.values.each do |value|
+        breakdown[party][value] = 0
+      end
+    end
+    
+    voters.each do|voter|      
+      party = voter[:voter]['party']
+      vote = mapping[voter[:vote]]
+      
+      breakdown[party][vote] += 1
+    end
+    
+    breakdown
   end
   
   def self.votes_for(doc, legislators)
