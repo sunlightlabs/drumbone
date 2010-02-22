@@ -49,6 +49,7 @@ class Roll
   def self.update
     session = Bill.current_session
     count  = 0
+    bad_rolls = []
     
     start = Time.now
     
@@ -69,7 +70,6 @@ class Roll
     # Debug helpers
     rolls = Dir.glob "data/govtrack/#{session}/rolls/*.xml"
     # rolls = Dir.glob "data/govtrack/#{session}/rolls/h2009-2.xml"
-    # rolls = Dir.glob "data/govtrack/#{session}/rolls/s2009-391.xml"
     # rolls = rolls.first 20
     
     rolls.each do |path|
@@ -105,13 +105,20 @@ class Roll
         :party_vote_breakdown => party_vote_breakdown
       }
       
-      roll.save
-      
-      count += 1
+      if roll.save
+        count += 1
+      else
+        bad_rolls << {:attributes => roll.attributes, :error_messages => roll.errors.full_messages}
+      end
     end
     
     Report.success self, "Synced #{count} roll calls for session ##{session} from GovTrack.us.", {:elapsed_time => Time.now - start}
     
+    if bad_rolls.any?
+      Report.failure self, "Failed to save #{bad_rolls.size} roll calls. Attached the last failed roll's attributes and error messages.", bad_rolls.last
+    end
+    
+    count
   end
   
   def self.bill_id_for(doc)

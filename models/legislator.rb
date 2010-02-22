@@ -99,6 +99,7 @@ class Legislator
     
     active_count = 0
     inactive_count = 0
+    bad_legislators = []
     
     start = Time.now
     
@@ -114,9 +115,12 @@ class Legislator
       end
       
       legislator.attributes = attributes_from api_legislator
-      legislator.save
       
-      active_count += 1
+      if legislator.save
+        active_count += 1
+      else
+        bad_legislators << {:attributes => legislator.attributes, :error_messages => legislator.errors.full_messages}
+      end
     end
     
     old_legislators.each do |legislator|
@@ -126,6 +130,12 @@ class Legislator
     end
     
     Report.success self, "Created/updated #{active_count} active legislators, marked #{inactive_count} as inactive", {:elapsed_time => Time.now - start}
+    
+    if bad_legislators.any?
+      Report.failure self, "Failed to save #{bad_legislators.size} legislators. Attached the last failed legislator's attributes and error messages.", bad_legislators.last
+    end
+    
+    active_count + inactive_count
   end
   
   

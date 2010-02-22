@@ -124,7 +124,7 @@ class Bill
       if bill.save
         count += 1
       else
-        bad_bills << {:attributes => bill.attributes, :errors => bill.errors.full_messages}
+        bad_bills << {:attributes => bill.attributes, :error_messages => bill.errors.full_messages}
       end
     end
     
@@ -136,8 +136,10 @@ class Bill
     end
     
     if bad_bills.any?
-      Report.failure self, "Failed to save #{bad_bills.size} bills. Attached the last bill's attributes and errors.", bad_bills.last
+      Report.failure self, "Failed to save #{bad_bills.size} bills. Attached the last failed bill's attributes and errors.", bad_bills.last
     end
+    
+    count
   end
   
   def self.summary_for(doc)
