@@ -13,7 +13,7 @@
 :email:
   :via: smtp
   :to: 
-    - # an array of email addresses
+    - # an array of email addresses - leave empty if you don't want to send email
   :from: 
   :smtp:
     :host: 

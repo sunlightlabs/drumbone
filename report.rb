@@ -40,7 +40,9 @@ class Report
   end
   
   def self.send_email(report)
-    Pony.mail email.merge(:subject => report.to_s, :body => report.attributes.inspect)
+    if email[:to] and email[:to].any?
+      Pony.mail email.merge(:subject => report.to_s, :body => report.attributes.inspect)
+    end
   end
   
   def self.email=(details)
