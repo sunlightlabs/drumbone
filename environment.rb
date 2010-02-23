@@ -1,4 +1,5 @@
 require 'rubygems'
+require 'sinatra'
 require 'sunlight'
 require 'mongo_mapper'
 
