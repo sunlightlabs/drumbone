@@ -140,9 +140,18 @@ class Roll
     end
   end
   
+  def self.vote_mapping
+    {
+      '-' => :nays, 
+      '+' => :ayes, 
+      '0' => :not_voting, 
+      'P' => :present
+    }
+  end
+  
   def self.vote_breakdown_for(voters)
     breakdown = {}
-    mapping = {'-' => :nays, '+' => :ayes, '0' => :not_voting, 'P' => :present}
+    mapping = vote_mapping
     
     # keep a tally for every party, and the total
     parties = voters.map {|v| v[:voter]['party']}.uniq + [:total]
