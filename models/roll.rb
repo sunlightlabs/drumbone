@@ -150,31 +150,27 @@ class Roll
   end
   
   def self.vote_breakdown_for(voters)
-    breakdown = {}
+    breakdown = {:total => {}}
     mapping = vote_mapping
-    
-    # keep a tally for every party, and the total
-    parties = voters.map {|v| v[:voter]['party']}.uniq + [:total]
-    
-    voters.each do |voter|
-      unless mapping[voter[:vote]]
-        mapping[voter[:vote]] = voter[:vote]
-      end
-    end
-    
-    parties.each do |party| 
-      breakdown[party] = {}
-      mapping.values.each do |value|
-        breakdown[party][value] = 0
-      end
-    end
     
     voters.each do|voter|      
       party = voter[:voter]['party']
-      vote = mapping[voter[:vote]]
+      vote = mapping[voter[:vote]] || voter[:vote]
+      
+      breakdown[party] ||= {}
+      breakdown[party][vote] ||= 0
+      breakdown[:total][vote] ||= 0
       
       breakdown[party][vote] += 1
       breakdown[:total][vote] += 1
+    end
+    
+    parties = breakdown.keys
+    votes = (breakdown[:total].keys + mapping.values).uniq
+    votes.each do |vote|
+      parties.each do |party|
+        breakdown[party][vote] ||= 0
+      end
     end
     
     breakdown
