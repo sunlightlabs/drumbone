@@ -48,7 +48,7 @@ class Bill
   end
   
   def self.sponsor_fields
-    [:first_name, :nickname, :last_name, :name_suffix, :title, :state, :party, :govtrack_id, :bioguide_id]
+    [:first_name, :nickname, :last_name, :name_suffix, :title, :state, :party, :district, :govtrack_id, :bioguide_id]
   end
   
   def self.update

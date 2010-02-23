@@ -39,7 +39,7 @@ class Roll
   end
   
   def self.voter_fields
-    [:first_name, :nickname, :last_name, :name_suffix, :title, :state, :party, :govtrack_id, :bioguide_id]
+    [:first_name, :nickname, :last_name, :name_suffix, :title, :state, :party, :district, :govtrack_id, :bioguide_id]
   end
   
   def self.bill_fields
