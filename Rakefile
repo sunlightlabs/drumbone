@@ -105,5 +105,5 @@ namespace :api do
 end
 
 task :environment do
-  require 'drumbone'
+  require 'environment'
 end
