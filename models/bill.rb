@@ -38,7 +38,7 @@ class Bill
   def self.fields
     {
       :basic => [:bill_id, :type, :code, :number, :session, :chamber, :updated_at, :state, :enacted],
-      :extended =>  [:short_title, :official_title, :introduced_at, :last_action_at, :last_vote_at, :enacted_at, :sponsor_id],
+      :extended =>  [:short_title, :official_title, :introduced_at, :last_action_at, :last_vote_at, :enacted_at, :sponsor_id, :cosponsors_count],
       :summary => [:summary],
       :keywords => [:keywords],
       :actions => [:actions],
@@ -118,6 +118,7 @@ class Bill
         :sponsor_id => sponsor ? sponsor[:bioguide_id] : nil,
         :cosponsors => cosponsors,
         :cosponsor_ids => cosponsors ? cosponsors.map {|c| c[:bioguide_id]} : nil,
+        :cosponsors_count => cosponsors ? cosponsors.size : 0,
         :actions => actions,
         :last_action_at => actions ? actions.last[:acted_at] : nil,
         :last_vote_at => last_vote_at_for(doc),
