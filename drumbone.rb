@@ -10,7 +10,7 @@ get /^\/(legislator)\.(json)$/ do
   fields = fields_for Legislator, params[:sections]
   conditions = conditions_for Legislator.unique_keys, params
   
-  unless legislator = Legislator.first(:conditions => conditions, :fields => fields)
+  unless conditions.any? and legislator = Legislator.first(:conditions => conditions, :fields => fields)
     halt 404, "Legislator not found by that ID"
   end
   
@@ -21,7 +21,7 @@ get /^\/(bill)\.(json)$/ do
   fields = fields_for Bill, params[:sections]
   conditions = conditions_for Bill.unique_keys, params
   
-  unless bill = Bill.first(:conditions => conditions, :fields => fields)
+  unless conditions.any? and bill = Bill.first(:conditions => conditions, :fields => fields)
     raise Sinatra::NotFound, "Bill not found"
   end
   
@@ -32,7 +32,7 @@ get /^\/(roll)\.(json)$/ do
   fields = fields_for Roll, params[:sections]
   conditions = conditions_for Roll.unique_keys, params
   
-  unless roll = Roll.first(:conditions => conditions, :fields => fields)
+  unless conditions.any? and roll = Roll.first(:conditions => conditions, :fields => fields)
     raise Sinatra::NotFound, "Roll call not found"
   end
   
@@ -42,6 +42,10 @@ end
 get /^\/(bills)\.(json)$/ do
   fields = fields_for Bill, params[:sections]
   conditions = conditions_for Bill.search_keys, params
+  
+  unless conditions.any?
+    raise Sinatra::NotFound, "No valid search criteria."
+  end
   
   bills = Bill.all({
     :conditions => conditions.merge(:session => (params[:session] || Bill.current_session.to_s)), 
@@ -55,6 +59,10 @@ end
 get /^\/(rolls)\.(json)$/ do
   fields = fields_for Roll, params[:sections]
   conditions = conditions_for Roll.search_keys, params
+  
+  unless conditions.any?
+    raise Sinatra::NotFound, "No valid search criteria."
+  end
   
   rolls = Roll.all({
     :conditions => conditions,
