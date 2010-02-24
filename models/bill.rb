@@ -22,6 +22,7 @@ class Bill
   ensure_index :last_action_at
   ensure_index :last_vote_at
   ensure_index :enacted_at
+  ensure_index :enacted
   
   timestamps!
   
@@ -31,12 +32,12 @@ class Bill
   end
   
   def self.search_keys
-    [:sponsor_id, :cosponsor_ids, :chamber]
+    [:sponsor_id, :cosponsor_ids, :chamber, :enacted]
   end
   
   def self.fields
     {
-      :basic => [:bill_id, :type, :code, :number, :session, :chamber, :updated_at, :state],
+      :basic => [:bill_id, :type, :code, :number, :session, :chamber, :updated_at, :state, :enacted],
       :extended =>  [:short_title, :official_title, :introduced_at, :last_action_at, :last_vote_at, :enacted_at, :sponsor_id],
       :summary => [:summary],
       :keywords => [:keywords],
@@ -74,7 +75,7 @@ class Bill
     
     
     bills = Dir.glob "data/govtrack/#{session}/bills/*.xml"
-    # bills = Dir.glob "data/govtrack/#{session}/bills/h3200.xml"
+    # bills = Dir.glob "data/govtrack/#{session}/bills/s181.xml"
     
     # debug helpers
     # bills = bills.first 20
@@ -99,6 +100,8 @@ class Bill
       cosponsors = cosponsors_for doc, legislators, missing_ids
       actions = actions_for doc
       
+      enacted_at = enacted_at_for doc
+      
       bill.attributes = {
         :type => type,
         :number => number,
@@ -118,7 +121,8 @@ class Bill
         :actions => actions,
         :last_action_at => actions ? actions.last[:acted_at] : nil,
         :last_vote_at => last_vote_at_for(doc),
-        :enacted_at => enacted_at_for(doc)
+        :enacted_at => enacted_at,
+        :enacted => !enacted_at.nil?
       }
       
       if bill.save
