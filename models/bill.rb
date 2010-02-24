@@ -75,8 +75,8 @@ class Bill
     
     
     
-    # bills = Dir.glob "data/govtrack/#{session}/bills/*.xml"
-    bills = Dir.glob "data/govtrack/#{session}/bills/s181.xml"
+    bills = Dir.glob "data/govtrack/#{session}/bills/*.xml"
+    # bills = Dir.glob "data/govtrack/#{session}/bills/s181.xml"
     
     # debug helpers
     # bills = bills.first 20
