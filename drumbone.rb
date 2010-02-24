@@ -42,6 +42,16 @@ get /^\/(bills)\.(json)$/ do
   fields = fields_for Bill, params[:sections]
   conditions = conditions_for Bill.search_keys, params
   
+  if conditions[:enacted]
+    if ["true", "1"].include? conditions[:enacted]
+      conditions[:enacted] = true
+    elsif ["false", "0"].include? conditions[:enacted]
+      conditions[:enacted] = false
+    else
+      conditions.delete :enacted
+    end
+  end
+  
   unless conditions.any?
     raise Sinatra::NotFound, "No valid search criteria."
   end
