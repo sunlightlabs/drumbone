@@ -42,6 +42,7 @@ class Bill
       :summary => [:summary],
       :keywords => [:keywords],
       :actions => [:actions],
+      :last_action => [:last_action],
       :sponsor => [:sponsor],
       :cosponsors => [:cosponsors],
       :cosponsor_ids => [:cosponsor_ids]
@@ -74,8 +75,8 @@ class Bill
     
     
     
-    bills = Dir.glob "data/govtrack/#{session}/bills/*.xml"
-    # bills = Dir.glob "data/govtrack/#{session}/bills/s181.xml"
+    # bills = Dir.glob "data/govtrack/#{session}/bills/*.xml"
+    bills = Dir.glob "data/govtrack/#{session}/bills/s181.xml"
     
     # debug helpers
     # bills = bills.first 20
@@ -120,6 +121,7 @@ class Bill
         :cosponsor_ids => cosponsors ? cosponsors.map {|c| c[:bioguide_id]} : nil,
         :cosponsors_count => cosponsors ? cosponsors.size : 0,
         :actions => actions,
+        :last_action => actions ? actions.last : nil,
         :last_action_at => actions ? actions.last[:acted_at] : nil,
         :last_vote_at => last_vote_at_for(doc),
         :enacted_at => enacted_at,
@@ -168,7 +170,7 @@ class Bill
     actions = doc.search('//actions/*').reject {|a| a.class == Hpricot::Text}.map do |action|
       {:acted_at => Time.at(action['date'].to_i),
        :text => (action/:text).inner_text,
-       :type => action.name  
+       :type => action.name
        }
     end
     actions.any? ? actions : nil
