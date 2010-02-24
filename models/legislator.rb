@@ -30,7 +30,7 @@ class Legislator
   def self.fields
     {:basic => [:updated_at, :bioguide_id, :govtrack_id, :chamber, :in_office],
      :extended => [:first_name, :nickname, :last_name, :name_suffix, :state, :district, :party, :title, :gender, :phone, :website, :twitter_id, :youtube_url],
-     :statistics => [:bills_sponsored, :bills_cosponsored, :resolutions_sponsored, :resolutions_cosponsored],
+     :statistics => [:statistics],
      :contracts => [:contracts]
     }
   end
@@ -41,10 +41,12 @@ class Legislator
     
     legislators.each do |legislator|
       legislator.attributes = {
-        :bills_sponsored => Bill.bills_sponsored(legislator),
-        :bills_cosponsored => Bill.bills_cosponsored(legislator),
-        :resolutions_sponsored => Bill.resolutions_sponsored(legislator),
-        :resolutions_cosponsored => Bill.resolutions_cosponsored(legislator)
+        :statistics => {
+          :bills_sponsored => Bill.bills_sponsored(legislator),
+          :bills_cosponsored => Bill.bills_cosponsored(legislator),
+          :resolutions_sponsored => Bill.resolutions_sponsored(legislator),
+          :resolutions_cosponsored => Bill.resolutions_cosponsored(legislator)
+        }
       }
       legislator.save
     end
