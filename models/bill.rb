@@ -262,8 +262,6 @@ class Bill
     end
   end
   
-  
-  
   def self.short_title_for(doc)
     titles = doc.search "//title[@type='short']"
     titles.any? ? titles.last.inner_text : nil

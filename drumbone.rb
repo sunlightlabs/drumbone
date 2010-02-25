@@ -52,10 +52,6 @@ get /^\/(bills)\.(json)$/ do
     end
   end
   
-  unless conditions.any?
-    raise Sinatra::NotFound, "No valid search criteria."
-  end
-  
   bills = Bill.all({
     :conditions => conditions.merge(:session => (params[:session] || Bill.current_session.to_s)), 
     :fields => fields,
@@ -68,10 +64,6 @@ end
 get /^\/(rolls)\.(json)$/ do
   fields = fields_for Roll, params[:sections]
   conditions = conditions_for Roll.search_keys, params
-  
-  unless conditions.any?
-    raise Sinatra::NotFound, "No valid search criteria."
-  end
   
   rolls = Roll.all({
     :conditions => conditions,
