@@ -38,14 +38,15 @@ class Bill
   def self.fields
     {
       :basic => [:bill_id, :type, :code, :number, :session, :chamber, :updated_at, :state, :enacted],
-      :extended =>  [:short_title, :official_title, :introduced_at, :last_action_at, :last_vote_at, :enacted_at, :sponsor_id, :cosponsors_count],
+      :extended =>  [:short_title, :official_title, :introduced_at, :last_action_at, :enacted_at, :sponsor_id, :cosponsors_count, :last_vote_at, :votes_count],
       :summary => [:summary],
       :keywords => [:keywords],
       :actions => [:actions],
       :last_action => [:last_action],
       :sponsor => [:sponsor],
       :cosponsors => [:cosponsors],
-      :cosponsor_ids => [:cosponsor_ids]
+      :cosponsor_ids => [:cosponsor_ids],
+      :votes => [:votes]
     }
   end
   
@@ -121,11 +122,11 @@ class Bill
         :cosponsor_ids => cosponsors ? cosponsors.map {|c| c[:bioguide_id]} : nil,
         :cosponsors_count => cosponsors ? cosponsors.size : 0,
         :actions => actions,
-        :last_action => actions ? actions.last : nil,
-        :last_action_at => actions ? actions.last[:acted_at] : nil,
-        :last_vote_at => last_vote_at_for(doc),
+        :last_action => actions.last,
+        :last_action_at => actions.last ? actions.last[:acted_at] : nil,
         :enacted_at => enacted_at,
-        :enacted => !enacted_at.nil?
+        :enacted => !enacted_at.nil?,
+        :votes => voice_votes_for(doc)
       }
       
       if bill.save
@@ -149,6 +150,71 @@ class Bill
     count
   end
   
+  # This method is going to get run *after* Bill.update and Roll.update
+  # In Bill.update, we set aside the voice votes present in the bill's actions
+  # into the Bill's "votes" field. This method is meant to take the roll call votes
+  # we picked up in Roll.update and integrate them alongside those voice votes,
+  # in order of the vote timestamp.
+  # 
+  # In case you're wondering, we don't pick up all roll call votes when we first process
+  # the action list, because not all roll call votes are linked through those actions.
+  # Some are, but many are just described in the text and there is no identifier or way of
+  # referring consistently to the roll call vote taken. The roll call XML files, on the other
+  # hand, consistently reference the bill they are about.
+  # 
+  # This also sets the last_vote_at timestamp, since we don't know it until we complete
+  # this voice/roll-call vote integration process.
+  def self.update_votes
+    bad_bills = []
+    count = 0
+    start = Time.now
+    
+    session = current_session
+    
+    bills = Bill.all :conditions => {:session => current_session.to_s} #, :limit => 20 # debug
+    
+    bills.each do |bill|
+      voice_votes = bill.votes.select {|vote| vote['how'] == 'voice'} # select as a sanity check
+      roll_votes = Roll.find_all_by_bill_id(bill.bill_id).map do |roll|
+        # using quotes for certain keys for consistency with voice vote keys
+        # once pulled from the database
+        {'how' => "roll", 'vote' => {
+          :chamber => roll.chamber,
+          :question => roll.question,
+          :type => roll.type,
+          'voted_at' => roll.voted_at,
+          :result => roll.result,
+          :vote_breakdown => roll.vote_breakdown,
+          :roll_id => roll.roll_id
+        }}
+      end
+      
+      puts "Updating bill #{bill.bill_id} with #{voice_votes.size} voice votes and #{roll_votes.size} roll call votes."
+      
+      votes = (voice_votes + roll_votes).sort_by {|v| v['vote']['voted_at']}
+      
+      bill.attributes = {
+        :votes => votes,
+        :votes_count => votes.size,
+        :last_vote_at => votes.last ? votes.last['vote']['voted_at'] : nil
+      }
+      
+      if bill.save
+        count += 1
+      else
+        bad_bills << {:attributes => bill.attributes, :error_messages => bill.errors.full_messages}
+      end
+    end
+    
+    if bad_bills.any?
+      Report.failure self, "Failed to save #{bad_bills.size} bills. Attached the last failed bill's attributes and errors.", bad_bills.last
+    end
+    
+    Report.success self, "Updated voice and roll call votes for #{count} bills.", {:elapsed_time => Time.now - start}
+    
+    count
+  end
+  
   def self.summary_for(doc)
     summary = doc.at(:summary).inner_text.strip
     summary.present? ? summary : nil
@@ -167,13 +233,27 @@ class Bill
   end
   
   def self.actions_for(doc)
-    actions = doc.search('//actions/*').reject {|a| a.class == Hpricot::Text}.map do |action|
-      {:acted_at => Time.at(action['date'].to_i),
-       :text => (action/:text).inner_text,
-       :type => action.name
-       }
+    doc.search('//actions/*').reject {|a| a.class == Hpricot::Text}.map do |action|
+      {
+        :acted_at => Time.at(action['date'].to_i),
+        :text => (action/:text).inner_text,
+        :type => action.name
+      }
     end
-    actions.any? ? actions : nil
+  end
+  
+  def self.voice_votes_for(doc)
+    chamber = {'h' => 'house', 's' => 'senate'}
+    doc.search('//actions/vote[@how="by voice vote"]|//actions/vote2[@how="by voice vote"]|//actions/vote-aux[@how="by voice vote"]').map do |vote|
+      # using strings for certain keys for consistency in comparison later 
+      # when they are fetched from the database
+      {'how' => 'voice', 'vote' => {
+        :result => vote['result'], 
+        'voted_at' => Time.at(vote['date'].to_i),
+        :question => (vote/:text).inner_text,
+        :chamber => chamber[vote['where']]
+      }}
+    end
   end
   
   def self.enacted_at_for(doc)
@@ -182,12 +262,7 @@ class Bill
     end
   end
   
-  def self.last_vote_at_for(doc)
-    votes = doc.search '//actions/vote|//actions/vote-aux'
-    if votes.any?
-      Time.at votes.last['date'].to_i
-    end
-  end
+  
   
   def self.short_title_for(doc)
     titles = doc.search "//title[@type='short']"
