@@ -2,7 +2,7 @@ set :environment, (ENV['target'] || 'staging')
 
 set :user, 'drumbone'
 set :application, user
-set :domain, 'drumbone.sunlightlabs.com'
+set :domain, 'drumbone.services.sunlightlabs.com'
 
 set :scm, :git
 set :repository, "git://github.com/sunlightlabs/#{application}.git"
