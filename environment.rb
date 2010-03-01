@@ -1,6 +1,13 @@
 require 'rubygems'
 require 'sinatra'
 require 'sunlight'
+
+gem 'activesupport', '= 2.3.5' 
+gem 'mongo', ">= 0.18.3", '< 1.0'
+gem 'mongo_ext', ">= 0.18.3", '< 1.0'
+gem 'mongo_mapper', '>= 0.7', '< 0.8'
+require 'active_support' 
+require 'mongo'
 require 'mongo_mapper'
 
 def config
