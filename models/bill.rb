@@ -189,7 +189,7 @@ class Bill
         }}
       end
       
-      puts "Updating bill #{bill.bill_id} with #{voice_votes.size} voice votes and #{roll_votes.size} roll call votes."
+      # puts "Updating bill #{bill.bill_id} with #{voice_votes.size} voice votes and #{roll_votes.size} roll call votes."
       
       votes = (voice_votes + roll_votes).sort_by {|v| v['vote']['voted_at']}
       
