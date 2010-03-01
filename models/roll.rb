@@ -70,7 +70,6 @@ class Roll
     # Debug helpers
     rolls = Dir.glob "data/govtrack/#{session}/rolls/*.xml"
     # rolls = Dir.glob "data/govtrack/#{session}/rolls/h2009-2.xml"
-    # rolls = rolls.first 20
     
     rolls.each do |path|
       doc = Hpricot::XML open(path)
@@ -94,7 +93,7 @@ class Roll
         :session => session,
         :result => doc.at(:result).inner_text,
         :bill_id => bill_id,
-        :voted_at => Time.at(doc.root['when'].to_i),
+        :voted_at => Time.parse(doc.root['datetime']),
         :type => doc.at(:type).inner_text,
         :question => doc.at(:question).inner_text,
         :required => doc.at(:required).inner_text,

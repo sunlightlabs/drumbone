@@ -77,7 +77,7 @@ class Bill
     
     
     bills = Dir.glob "data/govtrack/#{session}/bills/*.xml"
-    # bills = Dir.glob "data/govtrack/#{session}/bills/s181.xml"
+    # bills = Dir.glob "data/govtrack/#{session}/bills/h730.xml"
     
     # debug helpers
     # bills = bills.first 20
@@ -111,7 +111,7 @@ class Bill
         :session => session,
         :chamber => {'h' => 'house', 's' => 'senate'}[type.first.downcase],
         :state => doc.at(:state).inner_text,
-        :introduced_at => Time.at(doc.at(:introduced)['date'].to_i),
+        :introduced_at => Time.parse(doc.at(:introduced)['datetime']),
         :short_title => short_title_for(doc),
         :official_title => official_title_for(doc),
         :keywords => doc.search('//subjects/term').map {|term| term['name']},
@@ -235,7 +235,7 @@ class Bill
   def self.actions_for(doc)
     doc.search('//actions/*').reject {|a| a.class == Hpricot::Text}.map do |action|
       {
-        :acted_at => Time.at(action['date'].to_i),
+        :acted_at => Time.parse(action['datetime']),
         :text => (action/:text).inner_text,
         :type => action.name
       }
@@ -249,7 +249,7 @@ class Bill
       # when they are fetched from the database
       {'how' => 'voice', 'vote' => {
         :result => vote['result'], 
-        'voted_at' => Time.at(vote['date'].to_i),
+        'voted_at' => Time.parse(vote['datetime']),
         :question => (vote/:text).inner_text,
         :chamber => chamber[vote['where']]
       }}
@@ -258,7 +258,7 @@ class Bill
   
   def self.enacted_at_for(doc)
     if enacted = doc.at('//actions/enacted')
-      Time.at enacted['date'].to_i
+      Time.parse enacted['datetime']
     end
   end
   
