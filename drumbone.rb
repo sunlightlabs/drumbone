@@ -5,7 +5,7 @@ require 'sinatra'
 require 'environment'
 
 
-get /^\/(legislator)\.(json)$/ do
+get /^\/api\/(legislator)\.(json)$/ do
   fields = fields_for Legislator, params[:sections]
   conditions = conditions_for Legislator.unique_keys, params
   
@@ -16,7 +16,7 @@ get /^\/(legislator)\.(json)$/ do
   json Legislator, attributes_for(legislator, fields), params[:callback]
 end
 
-get /^\/(bill)\.(json)$/ do
+get /^\/api\/(bill)\.(json)$/ do
   fields = fields_for Bill, params[:sections]
   conditions = conditions_for Bill.unique_keys, params
   
@@ -27,7 +27,7 @@ get /^\/(bill)\.(json)$/ do
   json Bill, attributes_for(bill, fields), params[:callback]
 end
 
-get /^\/(roll)\.(json)$/ do
+get /^\/api\/(roll)\.(json)$/ do
   fields = fields_for Roll, params[:sections]
   conditions = conditions_for Roll.unique_keys, params
   
@@ -38,7 +38,7 @@ get /^\/(roll)\.(json)$/ do
   json Roll, attributes_for(roll, fields), params[:callback]
 end
 
-get /^\/(bills)\.(json)$/ do
+get /^\/api\/(bills)\.(json)$/ do
   fields = fields_for Bill, params[:sections]
   conditions = conditions_for Bill.search_keys, params
   
@@ -61,7 +61,7 @@ get /^\/(bills)\.(json)$/ do
   json Bill, bills.map {|bill| attributes_for bill, fields}, params[:callback]
 end
 
-get /^\/(rolls)\.(json)$/ do
+get /^\/api\/(rolls)\.(json)$/ do
   fields = fields_for Roll, params[:sections]
   conditions = conditions_for Roll.search_keys, params
   

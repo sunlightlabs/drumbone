@@ -8,7 +8,7 @@ end
 
 before do
   # verify signature and parameters
-  if request.path_info =~ /^\/api\//
+  if request.path_info =~ /^\/analytics\//
     unless SunlightServices.verify params, config[:services][:shared_secret], config[:services][:api_name]
       halt 403, 'Bad signature' 
     end
@@ -34,7 +34,7 @@ after do
   end
 end
 
-post '/api/create_key/' do
+post '/analytics/create_key/' do
   begin
     ApiKey.create! :key => params[:key],
         :email => params[:email],
@@ -44,7 +44,7 @@ post '/api/create_key/' do
   end
 end
 
-post '/api/update_key/' do
+post '/analytics/update_key/' do
   if key = ApiKey.first(:conditions => {:key => params[:key]})
     begin
       key.update_attributes! :email => params[:email], :status => params[:status]
@@ -56,7 +56,7 @@ post '/api/update_key/' do
   end
 end
 
-post '/api/update_key_by_email/' do
+post '/analytics/update_key_by_email/' do
   if key = ApiKey.first(:conditions => {:email => params[:email]})
     begin
       key.update_attributes! :key => params[:key], :status => params[:status]

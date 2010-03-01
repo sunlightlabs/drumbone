@@ -17,7 +17,7 @@ configure do
 end
 
 
-require 'api'
+require 'analytics'
 require 'report'
 
 Dir.glob('models/*.rb').each {|model| load model}
