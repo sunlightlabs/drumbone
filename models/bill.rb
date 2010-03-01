@@ -54,8 +54,8 @@ class Bill
     [:first_name, :nickname, :last_name, :name_suffix, :title, :state, :party, :district, :govtrack_id, :bioguide_id]
   end
   
-  def self.update
-    session = Bill.current_session
+  def self.update(session = nil)
+    session ||= current_session
     count = 0
     missing_ids = []
     bad_bills = []
@@ -77,7 +77,7 @@ class Bill
     
     
     bills = Dir.glob "data/govtrack/#{session}/bills/*.xml"
-    # bills = Dir.glob "data/govtrack/#{session}/bills/h730.xml"
+    # bills = Dir.glob "data/govtrack/#{session}/bills/h3961.xml"
     
     # debug helpers
     # bills = bills.first 20
@@ -164,12 +164,12 @@ class Bill
   # 
   # This also sets the last_vote_at timestamp, since we don't know it until we complete
   # this voice/roll-call vote integration process.
-  def self.update_votes
+  def self.update_votes(session = nil)
     bad_bills = []
     count = 0
     start = Time.now
     
-    session = current_session
+    session ||= current_session
     
     bills = Bill.all :conditions => {:session => current_session.to_s} #, :limit => 20 # debug
     
@@ -244,10 +244,10 @@ class Bill
   
   def self.voice_votes_for(doc)
     chamber = {'h' => 'house', 's' => 'senate'}
-    doc.search('//actions/vote[@how="by voice vote"]|//actions/vote2[@how="by voice vote"]|//actions/vote-aux[@how="by voice vote"]').map do |vote|
+    doc.search('//actions/vote[@how!="roll"]|//actions/vote2[@how!="roll"]|//actions/vote-aux[@how!="roll"]').map do |vote|
       # using strings for certain keys for consistency in comparison later 
       # when they are fetched from the database
-      {'how' => 'voice', 'vote' => {
+      {'how' => vote['how'].downcase, 'vote' => {
         :result => vote['result'], 
         'voted_at' => Time.parse(vote['datetime']),
         :question => (vote/:text).inner_text,

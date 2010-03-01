@@ -46,8 +46,8 @@ class Roll
     Bill.fields[:basic] + Bill.fields[:extended]
   end
 
-  def self.update
-    session = Bill.current_session
+  def self.update(session = nil)
+    session ||= Bill.current_session
     count  = 0
     bad_rolls = []
     
