@@ -27,8 +27,7 @@ class Legislator
   end
   
   def self.fields
-    {:basic => [:updated_at, :bioguide_id, :govtrack_id, :chamber, :in_office],
-     :extended => [:first_name, :nickname, :last_name, :name_suffix, :state, :district, :party, :title, :gender, :phone, :website, :twitter_id, :youtube_url, :congress_office],
+    {:basic => [:updated_at, :bioguide_id, :govtrack_id, :chamber, :in_office, :first_name, :nickname, :last_name, :name_suffix, :state, :district, :party, :title, :gender, :phone, :website, :twitter_id, :youtube_url, :congress_office],
      :statistics => [:statistics],
      :contracts => [:contracts]
     }

@@ -29,8 +29,7 @@ class Roll
   
   def self.fields
     {
-      :basic => [:roll_id, :number, :year, :chamber, :session, :result, :bill_id, :voted_at, :updated_at],
-      :extended => [:type, :question, :required, :vote_breakdown],
+      :basic => [:roll_id, :number, :year, :chamber, :session, :result, :bill_id, :voted_at, :updated_at, :type, :question, :required, :vote_breakdown],
       :party_vote_breakdown => [:party_vote_breakdown],
       :voter_ids => [:voter_ids],
       :voters => [:voters],

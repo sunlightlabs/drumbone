@@ -37,8 +37,7 @@ class Bill
   
   def self.fields
     {
-      :basic => [:bill_id, :type, :code, :number, :session, :chamber, :updated_at, :state, :enacted],
-      :extended =>  [:short_title, :official_title, :introduced_at, :last_action_at, :enacted_at, :sponsor_id, :cosponsors_count, :last_vote_at, :votes_count],
+      :basic => [:bill_id, :type, :code, :number, :session, :chamber, :updated_at, :state, :enacted, :short_title, :official_title, :introduced_at, :last_action_at, :enacted_at, :sponsor_id, :cosponsors_count, :last_vote_at, :votes_count],
       :summary => [:summary],
       :keywords => [:keywords],
       :actions => [:actions],
