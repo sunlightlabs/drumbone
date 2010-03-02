@@ -79,7 +79,7 @@ class Bill
     # bills = Dir.glob "data/govtrack/#{session}/bills/h3961.xml"
     
     # debug helpers
-    bills = bills[2000..-1]
+    # bills = bills[2000..-1]
     
     bills.each do |path|
       doc = Hpricot::XML open(path)
