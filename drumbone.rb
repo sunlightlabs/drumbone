@@ -98,10 +98,20 @@ helpers do
   end
 
   def pagination_for(params)
-    {
-      :limit => (params[:per_page] || 20).to_i,
-      :offset => ((params[:page] || 1).to_i - 1 ) * (params[:per_page] || 20).to_i
-    }
+    default_per_page = 20
+    max_per_page = 500
+    max_page = 200000000 # let's keep it realistic
+    
+    # rein in per_page to somewhere between 1 and the max
+    per_page = (params[:per_page] || default_per_page).to_i
+    per_page = default_per_page if per_page <= 0
+    per_page = max_per_page if per_page > max_per_page
+    
+    # valid page number, please
+    page = (params[:page] || 1).to_i
+    page = 1 if page <= 0 or page > max_page
+    
+    {:limit => per_page, :offset => (page - 1 ) * per_page}
   end
 
   def fields_for(model, sections)
