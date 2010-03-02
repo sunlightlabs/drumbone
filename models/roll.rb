@@ -42,7 +42,7 @@ class Roll
   end
   
   def self.bill_fields
-    Bill.fields[:basic] + Bill.fields[:extended]
+    Bill.fields[:basic]
   end
 
   def self.update(session = nil)
