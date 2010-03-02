@@ -21,14 +21,15 @@ before do
 end
 
 after do
-  unless request.path_info =~ /^\/api\//
+  if request.path_info =~ /^\/api\//
     # log hits
     if params[:captures]
       Hit.create(
         :sections => (params[:sections] || '').split(','),
         :method => params[:captures][0],
         :format => params[:captures][1],
-        :key => api_key
+        :key => api_key,
+        :query_string => request.query_string
       )
     end
   end
