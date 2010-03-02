@@ -29,7 +29,7 @@ class Roll
   
   def self.fields
     {
-      :basic => [:roll_id, :chamber, :session, :result, :bill_id, :voted_at, :updated_at],
+      :basic => [:roll_id, :number, :year, :chamber, :session, :result, :bill_id, :voted_at, :updated_at],
       :extended => [:type, :question, :required, :vote_breakdown],
       :party_vote_breakdown => [:party_vote_breakdown],
       :voter_ids => [:voter_ids],
@@ -70,11 +70,17 @@ class Roll
     # Debug helpers
     rolls = Dir.glob "data/govtrack/#{session}/rolls/*.xml"
     # rolls = Dir.glob "data/govtrack/#{session}/rolls/h2009-2.xml"
+    # rolls = rolls.first 20
     
     rolls.each do |path|
       doc = Hpricot::XML open(path)
       
-      roll_id = File.basename path, '.xml'
+      filename = File.basename path
+      matches = filename.match /^([hs])(\d+)-(\d+)\.xml/
+      year = matches[2]
+      number = matches[3]
+      
+      roll_id = "#{matches[1]}#{number}-#{year}"
       
       if roll = Roll.first(:conditions => {:roll_id => roll_id})
         # puts "[Roll #{roll_id}] About to be updated"
@@ -89,7 +95,10 @@ class Roll
       vote_breakdown = party_vote_breakdown.delete :total
       
       roll.attributes = {
+        :filename => filename,
         :chamber => doc.root['where'],
+        :year => year,
+        :number => number,
         :session => session,
         :result => doc.at(:result).inner_text,
         :bill_id => bill_id,

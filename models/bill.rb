@@ -85,6 +85,7 @@ class Bill
     bills.each do |path|
       doc = Hpricot::XML open(path)
       
+      filename = File.basename path
       type = type_for doc.root.attributes['type']
       number = doc.root.attributes['number']
       code = "#{type}#{number}"
@@ -107,6 +108,7 @@ class Bill
       state = doc.at(:state) ? doc.at(:state).inner_text : "UNKNOWN"
       
       bill.attributes = {
+        :filename => filename,
         :type => type,
         :number => number,
         :code => code,
