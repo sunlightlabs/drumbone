@@ -32,7 +32,7 @@ class Bill
   end
   
   def self.search_keys
-    [:sponsor_id, :cosponsor_ids, :chamber, :enacted]
+    [:sponsor_id, :cosponsor_ids, :chamber, :enacted, :session]
   end
   
   def self.fields
@@ -62,11 +62,11 @@ class Bill
     
     start = Time.now
     
-    FileUtils.mkdir_p "data/govtrack/#{session}/bills"
-    unless system("rsync -az govtrack.us::govtrackdata/us/#{session}/bills/ data/govtrack/#{session}/bills/")
-      Report.failure self, "Couldn't rsync to Govtrack.us."
-      return
-    end
+#     FileUtils.mkdir_p "data/govtrack/#{session}/bills"
+#     unless system("rsync -az govtrack.us::govtrackdata/us/#{session}/bills/ data/govtrack/#{session}/bills/")
+#       Report.failure self, "Couldn't rsync to Govtrack.us."
+#       return
+#     end
     
     # make lookups faster later by caching a hash of legislators from which we can lookup govtrack_ids
     legislators = {}
@@ -80,7 +80,7 @@ class Bill
     # bills = Dir.glob "data/govtrack/#{session}/bills/h3961.xml"
     
     # debug helpers
-    # bills = bills.first 20
+    bills = bills[2000..-1]
     
     bills.each do |path|
       doc = Hpricot::XML open(path)
@@ -104,13 +104,15 @@ class Bill
       
       enacted_at = enacted_at_for doc
       
+      state = doc.at(:state) ? doc.at(:state).inner_text : "UNKNOWN"
+      
       bill.attributes = {
         :type => type,
         :number => number,
         :code => code,
         :session => session,
         :chamber => {'h' => 'house', 's' => 'senate'}[type.first.downcase],
-        :state => doc.at(:state).inner_text,
+        :state => state,
         :introduced_at => Time.parse(doc.at(:introduced)['datetime']),
         :short_title => short_title_for(doc),
         :official_title => official_title_for(doc),
@@ -148,6 +150,8 @@ class Bill
     end
     
     count
+  rescue Exception => exception
+    Report.failure self, "Exception while saving Bills. Attached exception to this message.", {:exception => {:backtrace => exception.backtrace, :message => exception.message}}
   end
   
   # This method is going to get run *after* Bill.update and Roll.update

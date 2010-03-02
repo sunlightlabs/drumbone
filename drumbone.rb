@@ -53,7 +53,7 @@ get /^\/api\/(bills)\.(json)$/ do
   end
   
   bills = Bill.all({
-    :conditions => conditions.merge(:session => (params[:session] || Bill.current_session.to_s)), 
+    :conditions => conditions,
     :fields => fields,
     :order => "#{params[:order] || 'introduced_at'} DESC"
   }.merge(pagination_for(params)))

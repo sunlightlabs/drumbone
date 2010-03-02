@@ -24,7 +24,7 @@ class Roll
   end
   
   def self.search_keys
-    [:bill_id, :chamber]
+    [:bill_id, :chamber, :session]
   end
   
   def self.fields
