@@ -49,6 +49,7 @@ class Roll
   def self.update(session = nil)
     session ||= Bill.current_session
     count  = 0
+    missing_ids = []
     bad_rolls = []
     
     start = Time.now
@@ -90,7 +91,7 @@ class Roll
       end
       
       bill_id = bill_id_for doc
-      voter_ids, voters = votes_for doc, legislators
+      voter_ids, voters = votes_for doc, legislators, missing_ids
       party_vote_breakdown = vote_breakdown_for voters
       vote_breakdown = party_vote_breakdown.delete :total
       
@@ -126,7 +127,14 @@ class Roll
       Report.failure self, "Failed to save #{bad_rolls.size} roll calls. Attached the last failed roll's attributes and error messages.", bad_rolls.last
     end
     
+    if missing_ids.any?
+      missing_ids = missing_ids.uniq
+      Report.warning self, "Found #{missing_ids.size} missing GovTrack IDs, attached. Vote counts on roll calls may be inaccurate until these are fixed.", {:missing_ids => missing_ids}
+    end
+    
     count
+  rescue Exception => exception
+    Report.failure self, "Exception while saving Rolls. Attached exception to this message.", {:exception => {:backtrace => exception.backtrace, :message => exception.message}}
   end
   
   def self.bill_id_for(doc)
@@ -184,7 +192,7 @@ class Roll
     breakdown
   end
   
-  def self.votes_for(doc, legislators)
+  def self.votes_for(doc, legislators, missing_ids)
     voter_ids = []
     voters = []
     
@@ -194,8 +202,12 @@ class Roll
       govtrack_id = elem['id']
       voter = voter_for govtrack_id, legislators
       
-      voter_ids << {:vote => vote, :voter_id => voter[:bioguide_id]}
-      voters << {:vote => vote, :voter => voter}
+      if voter
+        voter_ids << {:vote => vote, :voter_id => voter[:bioguide_id]}
+        voters << {:vote => vote, :voter => voter}
+      else
+        missing_ids << govtrack_id
+      end
     end
     
     [voter_ids, voters.compact]
