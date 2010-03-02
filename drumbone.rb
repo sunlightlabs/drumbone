@@ -83,10 +83,7 @@ helpers do
     key = model.to_s.underscore
     key = key.pluralize if object.is_a?(Array)
     
-    json = {
-      key => object,
-      :sections => model.fields.keys.sort_by {|x, y| x == :basic ? -1 : x.to_s <=> y.to_s}
-    }.to_json
+    json = {key => object, :sections => model.fields.keys}.to_json
     
     callback ? "#{callback}(#{json});" : json
   end
