@@ -38,6 +38,7 @@ class Bill
   def self.fields
     {
       :basic => [:bill_id, :type, :code, :number, :session, :chamber, :updated_at, :state, :enacted, :short_title, :official_title, :introduced_at, :last_action_at, :enacted_at, :sponsor_id, :cosponsors_count, :last_vote_at, :votes_count],
+      :titles => [:titles],
       :summary => [:summary],
       :keywords => [:keywords],
       :actions => [:actions],
@@ -76,7 +77,7 @@ class Bill
     
     
     bills = Dir.glob "data/govtrack/#{session}/bills/*.xml"
-    # bills = Dir.glob "data/govtrack/#{session}/bills/h3961.xml"
+    # bills = Dir.glob "data/govtrack/#{session}/bills/h1.xml"
     
     # debug helpers
     # bills = bills[2000..-1]
@@ -101,9 +102,8 @@ class Bill
       sponsor = sponsor_for doc, legislators, missing_ids
       cosponsors = cosponsors_for doc, legislators, missing_ids
       actions = actions_for doc
-      
+      titles = titles_for doc
       enacted_at = enacted_at_for doc
-      
       state = doc.at(:state) ? doc.at(:state).inner_text : "UNKNOWN"
       
       bill.attributes = {
@@ -115,8 +115,9 @@ class Bill
         :chamber => {'h' => 'house', 's' => 'senate'}[type.first.downcase],
         :state => state,
         :introduced_at => Time.parse(doc.at(:introduced)['datetime']),
-        :short_title => short_title_for(doc),
-        :official_title => official_title_for(doc),
+        :short_title => most_recent_title_from(titles, :short),
+        :official_title => most_recent_title_from(titles, :official),
+        :titles => titles,
         :keywords => doc.search('//subjects/term').map {|term| term['name']},
         :summary => summary_for(doc),
         :sponsor => sponsor,
@@ -237,6 +238,24 @@ class Bill
     cosponsors.any? ? cosponsors : nil
   end
   
+  def self.titles_for(doc)
+    # important that the result be an array so that we preserve order of titles
+    # to pick out the most recent title later
+    titles = doc.search "//title"
+    titles.map do |title|
+      {
+        :type => title['type'],
+        :as => title['as'],
+        :title => title.inner_text
+      }
+    end
+  end
+  
+  def self.most_recent_title_from(titles, type)
+    groups = titles.select {|t| t[:type] == type.to_s}.group_by {|t| t[:as]}
+    groups[groups.keys.last].first[:title]
+  end
+  
   def self.actions_for(doc)
     doc.search('//actions/*').reject {|a| a.class == Hpricot::Text}.map do |action|
       {
@@ -265,16 +284,6 @@ class Bill
     if enacted = doc.at('//actions/enacted')
       Time.parse enacted['datetime']
     end
-  end
-  
-  def self.short_title_for(doc)
-    titles = doc.search "//title[@type='short']"
-    titles.any? ? titles.last.inner_text : nil
-  end
-  
-  def self.official_title_for(doc)
-    titles = doc.search "//title[@type='official']"
-    titles.any? ? titles.last.inner_text : nil
   end
   
   def self.legislator_for(govtrack_id, legislators, missing_ids)
