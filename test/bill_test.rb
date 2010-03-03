@@ -20,6 +20,10 @@ class BillTest < Test::Unit::TestCase
       'hr4173-wall-street' => {
          :short => "Wall Street Reform and Consumer Protection Act of 2009",
          :official => "To provide for financial regulatory reform, to protect consumers and investors, to enhance Federal understanding of insurance issues, to regulate the over-the-counter derivatives markets, and for other purposes."
+      },
+      'no-short' => {
+         :short => nil,
+         :official => "An act entitled The Patient Protection and Affordable Care Act."
       }
     }
     

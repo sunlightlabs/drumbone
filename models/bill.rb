@@ -253,7 +253,8 @@ class Bill
   
   def self.most_recent_title_from(titles, type)
     groups = titles.select {|t| t[:type] == type.to_s}.group_by {|t| t[:as]}
-    groups[groups.keys.last].first[:title]
+    recent_group = groups[groups.keys.last]
+    recent_group and recent_group.any? ? recent_group.first[:title] : nil
   end
   
   def self.actions_for(doc)
