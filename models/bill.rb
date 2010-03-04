@@ -62,11 +62,11 @@ class Bill
     
     start = Time.now
     
-#     FileUtils.mkdir_p "data/govtrack/#{session}/bills"
-#     unless system("rsync -az govtrack.us::govtrackdata/us/#{session}/bills/ data/govtrack/#{session}/bills/")
-#       Report.failure self, "Couldn't rsync to Govtrack.us."
-#       return
-#     end
+    FileUtils.mkdir_p "data/govtrack/#{session}/bills"
+    unless system("rsync -az govtrack.us::govtrackdata/us/#{session}/bills/ data/govtrack/#{session}/bills/")
+      Report.failure self, "Couldn't rsync to Govtrack.us."
+      return
+    end
     
     # make lookups faster later by caching a hash of legislators from which we can lookup govtrack_ids
     legislators = {}
