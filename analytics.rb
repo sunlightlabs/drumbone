@@ -29,7 +29,10 @@ after do
         :method => params[:captures][0],
         :format => params[:captures][1],
         :key => api_key,
-        :query_string => request.query_string
+        :query_string => request.query_string,
+        :user_agent => request.env['HTTP_USER_AGENT'],
+        :ip_address => request.env['REMOTE_ADDR'],
+        :query_hash => request.env['rack.request.query_hash']
       )
     end
   end
@@ -120,7 +123,16 @@ class Hit
   
   key :method, String, :required => true
   key :key, String, :required => true
-  key :sections, Array
-  key :format, String
   timestamps!
+  
+  ensure_index :method
+  ensure_index :key
+  ensure_index :sections
+  ensure_index :format
+  ensure_index :user_agent
+  ensure_index :ip_address
+  ensure_index "query_hash.bill_id"
+  ensure_index "query_hash.roll_id"
+  ensure_index "query_hash.bioguide_id"
+  ensure_index "query_hash.govtrack_id"
 end
