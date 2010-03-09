@@ -17,6 +17,9 @@ before do
     unless ApiKey.allowed? api_key
       halt 403, 'API key required, you can obtain one from http://services.sunlightlabs.com/accounts/register/'
     end
+    
+    # pre-processing on params
+    params[:sections] = (params[:sections] || '').split ','
   end
 end
 
@@ -25,7 +28,7 @@ after do
     # log hits
     if params[:captures]
       Hit.create(
-        :sections => (params[:sections] || '').split(','),
+        :sections => params[:sections],
         :method => params[:captures][0],
         :format => params[:captures][1],
         :key => api_key,

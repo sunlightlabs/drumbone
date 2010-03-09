@@ -115,8 +115,8 @@ helpers do
   end
 
   def fields_for(model, sections)
-    keys = sections ? (sections || '').split(',') : model.fields.keys
-    keys.uniq.map {|section| model.fields[section.to_sym]}.flatten.compact
+    sections = model.fields.keys if sections.empty?
+    sections.uniq.map {|section| model.fields[section.to_sym]}.flatten.compact
   end
 
   def attributes_for(document, fields)
