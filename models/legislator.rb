@@ -59,36 +59,40 @@ class Legislator
     senators = Legislator.all :conditions => {:chamber => 'Senate', :in_office => true}
     
     states = MongoMapper.database.collection(:legislators).distinct :state
-    state_totals = {}
+    state_info = {}
     
     states.each do |state|
-      #puts "[#{state}] Storing contractor totals"
+      puts "[#{state}] Storing contractor totals"
       
-      state_totals[state] = UsaSpending.totals_for_state fiscal_year, state
+      state_info[state] = UsaSpending.top_contractors_for_state fiscal_year, state
     end
     
     senators.each do |senator|
-      #puts "[#{senator.bioguide_id}] Updating contracts for #{senator.title}. #{senator.last_name}"
+      puts "[#{senator.bioguide_id}] Updating contracts for #{senator.title}. #{senator.last_name}"
       
-      senator.attributes = {:contracts => state_totals[senator.state].merge(:fiscal_year => fiscal_year)}
+      senator.attributes = {
+        :contracts => state_info[senator.state].merge(:fiscal_year => fiscal_year)
+      }
+      
       senator.save
-      
       count += 1
     end
     
     representatives.each do |representative|
-      #puts "[#{representative.bioguide_id}] Updating contracts for #{representative.title}. #{representative.last_name}"
+      puts "[#{representative.bioguide_id}] Updating contracts for #{representative.title}. #{representative.last_name}"
       
-      totals = UsaSpending.totals_for_district fiscal_year, representative.state, representative.district
-      representative.attributes = {:contracts => totals.merge(:fiscal_year => fiscal_year)}
+      info = UsaSpending.top_contractors_for_district fiscal_year, representative.state, representative.district
+      representative.attributes = {
+        :contracts => info.merge(:fiscal_year => fiscal_year)
+      }
+      
       representative.save
-      
       count += 1
     end
     
     Report.success "Contracts", "Updated #{count} legislators with contract data from USASpending.gov", {:elapsed_time => Time.now - start_time}
   rescue Exception => ex
-    Report.failure "Contracts", "Exception while fetching contract data from USASpending.gov, error attached", {:exception => ex.inspect}
+    Report.failure "Contracts", "Exception while fetching contract data from USASpending.gov, error attached", {:message => ex.message, :backtrace => ex.backtrace}
   end
   
   def self.update
