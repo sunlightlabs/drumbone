@@ -8,13 +8,13 @@ require 'environment'
 class RollTest < Test::Unit::TestCase
   
   def test_vote_breakdown_for_regular_vote
-    voters = [
-        {:voter => {'party' => 'R'}, :vote => '+'},
-        {:voter => {'party' => 'R'}, :vote => '+'},
-        {:voter => {'party' => 'R'}, :vote => '0'},
-        {:voter => {'party' => 'D'}, :vote => '-'},
-        {:voter => {'party' => 'D'}, :vote => '+'},
-      ]
+    voters = {
+        'a' => {:voter => {'party' => 'R'}, :vote => '+'},
+        'b' => {:voter => {'party' => 'R'}, :vote => '+'},
+        'c' => {:voter => {'party' => 'R'}, :vote => '0'},
+        'd' => {:voter => {'party' => 'D'}, :vote => '-'},
+        'e' => {:voter => {'party' => 'D'}, :vote => '+'},
+      }
     breakdown = Roll.vote_breakdown_for voters
     totals = breakdown.delete :total
     
@@ -40,13 +40,13 @@ class RollTest < Test::Unit::TestCase
   end
   
   def test_vote_breakdown_for_speaker_election
-    voters = [
-        {:voter => {'party' => 'R'}, :vote => 'Boehner'},
-        {:voter => {'party' => 'R'}, :vote => 'Boehner'},
-        {:voter => {'party' => 'R'}, :vote => 'Pelosi'},
-        {:voter => {'party' => 'D'}, :vote => 'Pelosi'},
-        {:voter => {'party' => 'D'}, :vote => 'Pelosi'},
-      ]
+    voters = {
+        'a' => {:voter => {'party' => 'R'}, :vote => 'Boehner'},
+        'b' => {:voter => {'party' => 'R'}, :vote => 'Boehner'},
+        'c' => {:voter => {'party' => 'R'}, :vote => 'Pelosi'},
+        'd' => {:voter => {'party' => 'D'}, :vote => 'Pelosi'},
+        'e' => {:voter => {'party' => 'D'}, :vote => 'Pelosi'},
+      }
     
     breakdown = Roll.vote_breakdown_for voters
     totals = breakdown.delete :total
