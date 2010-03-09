@@ -83,7 +83,7 @@ helpers do
     key = model.to_s.underscore
     key = key.pluralize if object.is_a?(Array)
     
-    json = {key => object, :sections => model.fields.keys}.to_json
+    json = {key => object}.to_json
     
     callback ? "#{callback}(#{json});" : json
   end
@@ -115,13 +115,21 @@ helpers do
   end
 
   def fields_for(model, sections)
-    sections = model.fields.keys if sections.empty?
-    sections.uniq.map {|section| model.fields[section.to_sym]}.flatten.compact
+    if sections.include?('basic')
+      sections.delete 'basic' # does nothing if not present
+      sections += model.basic_fields.map {|field| field.to_s}
+    end
+    sections.uniq
   end
 
   def attributes_for(document, fields)
     attributes = document.attributes
-    attributes.keys.each {|key| attributes.delete(key) unless fields.include?(key.to_sym)}
+    
+    [:created_at, :_id, :id].each {|field| attributes.delete field.to_s}
+    if fields.any?
+      attributes.keys.each {|key| attributes.delete(key) unless fields.include?(key)}
+    end
+    
     attributes
   end
   

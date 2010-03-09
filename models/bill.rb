@@ -35,19 +35,8 @@ class Bill
     [:sponsor_id, :cosponsor_ids, :chamber, :enacted, :session]
   end
   
-  def self.fields
-    {
-      :basic => [:bill_id, :type, :code, :number, :session, :chamber, :updated_at, :state, :enacted, :short_title, :official_title, :introduced_at, :last_action_at, :enacted_at, :sponsor_id, :cosponsors_count, :last_vote_at, :votes_count],
-      :titles => [:titles],
-      :summary => [:summary],
-      :keywords => [:keywords],
-      :actions => [:actions],
-      :last_action => [:last_action],
-      :sponsor => [:sponsor],
-      :cosponsors => [:cosponsors],
-      :cosponsor_ids => [:cosponsor_ids],
-      :votes => [:votes]
-    }
+  def self.basic_fields
+    [:bill_id, :type, :code, :number, :session, :chamber, :updated_at, :state, :enacted, :short_title, :official_title, :introduced_at, :last_action_at, :enacted_at, :sponsor_id, :cosponsors_count, :last_vote_at, :votes_count]
   end
   
   def self.sponsor_fields

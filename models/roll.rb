@@ -27,14 +27,8 @@ class Roll
     [:bill_id, :chamber, :session]
   end
   
-  def self.fields
-    {
-      :basic => [:roll_id, :number, :year, :chamber, :session, :result, :bill_id, :voted_at, :updated_at, :type, :question, :required, :vote_breakdown],
-      :party_vote_breakdown => [:party_vote_breakdown],
-      :voter_ids => [:voter_ids],
-      :voters => [:voters],
-      :bill => [:bill]
-    }
+  def self.basic_fields
+    [:roll_id, :number, :year, :chamber, :session, :result, :bill_id, :voted_at, :updated_at, :type, :question, :required, :vote_breakdown]
   end
   
   def self.voter_fields
@@ -42,7 +36,7 @@ class Roll
   end
   
   def self.bill_fields
-    Bill.fields[:basic]
+    Bill.basic_fields
   end
 
   def self.update(session = nil)
