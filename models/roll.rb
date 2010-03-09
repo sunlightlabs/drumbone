@@ -69,7 +69,7 @@ class Roll
     
     # Debug helpers
     rolls = Dir.glob "data/govtrack/#{session}/rolls/*.xml"
-    # rolls = Dir.glob "data/govtrack/#{session}/rolls/h2009-2.xml"
+    # rolls = Dir.glob "data/govtrack/#{session}/rolls/h2009-143.xml"
     # rolls = rolls.first 20
     
     rolls.each do |path|
@@ -168,7 +168,7 @@ class Roll
     breakdown = {:total => {}}
     mapping = vote_mapping
     
-    voters.each do|voter|      
+    voters.each do|bioguide_id, voter|      
       party = voter[:voter]['party']
       vote = mapping[voter[:vote]] || voter[:vote]
       
@@ -192,24 +192,25 @@ class Roll
   end
   
   def self.votes_for(doc, legislators, missing_ids)
-    voter_ids = []
-    voters = []
+    voter_ids = {}
+    voters = {}
     
     doc.search("//voter").each do |elem|
       vote = elem['vote']
       value = elem['value']
       govtrack_id = elem['id']
       voter = voter_for govtrack_id, legislators
+      bioguide_id = voter[:bioguide_id]
       
       if voter
-        voter_ids << {:vote => vote, :voter_id => voter[:bioguide_id]}
-        voters << {:vote => vote, :voter => voter}
+        voter_ids[bioguide_id] = vote
+        voters[bioguide_id] = {:vote => vote, :voter => voter}
       else
         missing_ids << govtrack_id
       end
     end
     
-    [voter_ids, voters.compact]
+    [voter_ids, voters]
   end
   
   def self.voter_for(govtrack_id, legislators)
