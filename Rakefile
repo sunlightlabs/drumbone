@@ -70,7 +70,7 @@ namespace :api do
     reports = []
     
     # get down to the driver level for the iteration
-    hits = MongoMapper.connection.db('drumbone').collection('hits')
+    hits = MongoMapper.database.collection :hits
     
     keys = hits.distinct :key, conditions
     keys.each do |key|

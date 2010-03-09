@@ -61,7 +61,7 @@ class Legislator
     representatives = Legislator.all :conditions => {:chamber => 'House', :in_office => true}
     senators = Legislator.all :conditions => {:chamber => 'Senate', :in_office => true}
     
-    states = MongoMapper.connection.db('drumbone').collection(:legislators).distinct :state
+    states = MongoMapper.database.collection(:legislators).distinct :state
     state_totals = {}
     
     states.each do |state|
