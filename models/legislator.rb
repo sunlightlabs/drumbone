@@ -6,6 +6,7 @@
 # update: Do whatever you have to do to update the model.
 
 require 'sunlight'
+require 'fastercsv'
 
 class Legislator
   include MongoMapper::Document
@@ -28,6 +29,61 @@ class Legislator
   
   def self.basic_fields
     [:updated_at, :bioguide_id, :govtrack_id, :chamber, :in_office, :first_name, :nickname, :last_name, :name_suffix, :state, :district, :party, :title, :gender, :phone, :website, :twitter_id, :youtube_url, :congress_office]
+  end
+  
+  def self.update_earmarks
+    start = Time.now
+    
+    results = {}
+    totals = {
+      'H' => {:amount => 0, :number => 0, :n => 0}, 
+      'S' => {:amount => 0, :number => 0, :n => 0}
+    }
+    
+    FasterCSV.foreach("data/earmarks/earmark_totals.csv") do |row|
+      fiscal_year = row[0]
+      rank = row[1]
+      crp_id = row[2]
+      amount = row[3].to_i
+      chamber = row[4]
+      number = row[5].to_i
+      
+      results[crp_id] = {
+        :total_amount => amount,
+        :total_number => number,
+        :rank => rank,
+        :fiscal_year => fiscal_year
+      }
+      
+      totals[chamber][:amount] += amount
+      totals[chamber][:number] += number
+      totals[chamber][:n] += 1
+    end
+    
+    averages = {
+      :house => {
+        :amount => (totals['H'][:amount].to_f / totals['H'][:n].to_f).to_i,
+        :number => (totals['H'][:number].to_f / totals['H'][:n].to_f).to_i
+      },
+      :senate => {
+        :amount => (totals['S'][:amount].to_f / totals['S'][:n].to_f).to_i,
+        :number => (totals['S'][:number].to_f / totals['S'][:n].to_f).to_i
+      }
+    }
+    
+    all(:conditions => {:in_office => true}).each do |legislator|
+      if results[legislator.crp_id]
+        legislator.attributes = {
+          :earmarks => results[legislator.crp_id].merge({
+             :average_amount => averages[legislator.chamber.to_sym][:amount],
+             :average_number => averages[legislator.chamber.to_sym][:number]
+          })
+        }
+        legislator.save
+      end
+    end
+    
+    Report.success "Earmarks", "Updated earmark information for all active legislators", {:elapsed_time => Time.now - start}
   end
   
   def self.update_statistics
@@ -163,10 +219,10 @@ class Legislator
     {
       :in_office => api_legislator.in_office,
       :chamber => {
-          'Rep' => 'House',
-          'Sen' => 'Senate',
-          'Del' => 'House',
-          'Com' => 'House'
+          'Rep' => 'house',
+          'Sen' => 'senate',
+          'Del' => 'house',
+          'Com' => 'house'
         }[api_legislator.title],
       
       :crp_id => api_legislator.crp_id,

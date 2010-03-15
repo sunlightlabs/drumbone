@@ -295,36 +295,36 @@ class Bill
   def self.bills_sponsored(legislator)
     Bill.count :conditions => {
       :sponsor_id => legislator.bioguide_id,
-      :chamber => legislator.chamber.downcase,
+      :chamber => legislator.chamber,
       :session => current_session.to_s,
-      :type => {'House' => 'hr', 'Senate' => 's'}[legislator.chamber]
+      :type => {'house' => 'hr', 'senate' => 's'}[legislator.chamber]
     }
   end
   
   def self.bills_cosponsored(legislator)
     Bill.count :conditions => {
       :cosponsor_ids => legislator.bioguide_id,
-      :chamber => legislator.chamber.downcase,
+      :chamber => legislator.chamber,
       :session => current_session.to_s,
-      :type => {'House' => 'hr', 'Senate' => 's'}[legislator.chamber]
+      :type => {'house' => 'hr', 'senate' => 's'}[legislator.chamber]
     }
   end
   
   def self.resolutions_sponsored(legislator)
     Bill.count :conditions => {
       :sponsor_id => legislator.bioguide_id,
-      :chamber => legislator.chamber.downcase,
+      :chamber => legislator.chamber,
       :session => current_session.to_s,
-      :type => {"$in" => {'House' => ['hcres', 'hres', 'hjres'], 'Senate' => ['scres', 'sres', 'sjres']}[legislator.chamber]}
+      :type => {"$in" => {'house' => ['hcres', 'hres', 'hjres'], 'senate' => ['scres', 'sres', 'sjres']}[legislator.chamber]}
     }
   end
   
   def self.resolutions_cosponsored(legislator)
     Bill.count :conditions => {
       :cosponsor_ids => legislator.bioguide_id,
-      :chamber => legislator.chamber.downcase,
+      :chamber => legislator.chamber,
       :session => current_session.to_s,
-      :type => {"$in" => {'House' => ['hcres', 'hres', 'hjres'], 'Senate' => ['scres', 'sres', 'sjres']}[legislator.chamber]}
+      :type => {"$in" => {'house' => ['hcres', 'hres', 'hjres'], 'senate' => ['scres', 'sres', 'sjres']}[legislator.chamber]}
     }
   end
   
