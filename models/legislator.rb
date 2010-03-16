@@ -118,13 +118,13 @@ class Legislator
     state_info = {}
     
     states.each do |state|
-      puts "[#{state}] Storing contractor totals"
+      # puts "[#{state}] Storing contractor totals"
       
       state_info[state] = UsaSpending.top_contractors_for_state fiscal_year, state
     end
     
     senators.each do |senator|
-      puts "[#{senator.bioguide_id}] Updating contracts for #{senator.title}. #{senator.last_name}"
+      # puts "[#{senator.bioguide_id}] Updating contracts for #{senator.title}. #{senator.last_name}"
       
       senator.attributes = {
         :contracts => state_info[senator.state].merge(:fiscal_year => fiscal_year)
@@ -135,7 +135,7 @@ class Legislator
     end
     
     representatives.each do |representative|
-      puts "[#{representative.bioguide_id}] Updating contracts for #{representative.title}. #{representative.last_name}"
+      # puts "[#{representative.bioguide_id}] Updating contracts for #{representative.title}. #{representative.last_name}"
       
       info = UsaSpending.top_contractors_for_district fiscal_year, representative.state, representative.district
       representative.attributes = {
