@@ -20,6 +20,7 @@ namespace :update do
     Bill.update_votes
     Legislator.update_statistics
     Legislator.update_contracts
+    Legislator.update_earmarks
   end
 end
 
