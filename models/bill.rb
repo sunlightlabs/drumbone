@@ -36,7 +36,15 @@ class Bill
   end
   
   def self.basic_fields
-    [:bill_id, :type, :code, :number, :session, :chamber, :updated_at, :state, :enacted, :short_title, :official_title, :introduced_at, :last_action_at, :enacted_at, :sponsor_id, :cosponsors_count, :last_vote_at, :votes_count]
+    [
+      :bill_id, :type, :code, :number, :session, :chamber, :updated_at, :state, 
+      :short_title, :official_title, 
+      :sponsor_id, :cosponsors_count, :votes_count, :last_action_at, :last_vote_at, 
+      :introduced_at, :house_result, :house_result_at, :senate_result, :senate_result_at, :passed, :passed_at,
+      :vetoed, :vetoed_at, :override_house_result, :override_house_result_at,
+      :override_senate_result, :override_senate_result_at, 
+      :awaiting_signature, :awaiting_signature_since, :enacted, :enacted_at
+    ]
   end
   
   def self.sponsor_fields
@@ -66,10 +74,10 @@ class Bill
     
     
     bills = Dir.glob "data/govtrack/#{session}/bills/*.xml"
-    # bills = Dir.glob "data/govtrack/#{session}/bills/h1.xml"
     
     # debug helpers
-    # bills = bills[2000..-1]
+    # bills = Dir.glob "data/govtrack/#{session}/bills/s2968.xml"
+    # bills = bills.first 20
     
     bills.each do |path|
       doc = Hpricot::XML open(path)
@@ -92,8 +100,9 @@ class Bill
       cosponsors = cosponsors_for doc, legislators, missing_ids
       actions = actions_for doc
       titles = titles_for doc
-      enacted_at = enacted_at_for doc
       state = doc.at(:state) ? doc.at(:state).inner_text : "UNKNOWN"
+      votes = votes_for doc
+      last_voted_at = votes.last ? votes.last[:voted_at] : nil
       
       bill.attributes = {
         :filename => filename,
@@ -103,7 +112,6 @@ class Bill
         :session => session,
         :chamber => {'h' => 'house', 's' => 'senate'}[type.first.downcase],
         :state => state,
-        :introduced_at => Time.parse(doc.at(:introduced)['datetime']),
         :short_title => most_recent_title_from(titles, :short),
         :official_title => most_recent_title_from(titles, :official),
         :titles => titles,
@@ -117,10 +125,66 @@ class Bill
         :actions => actions,
         :last_action => actions.last,
         :last_action_at => actions.last ? actions.last[:acted_at] : nil,
-        :enacted_at => enacted_at,
-        :enacted => !enacted_at.nil?,
-        :votes => voice_votes_for(doc)
+        :votes => votes,
+        :last_voted_at => last_voted_at
       }
+      
+      # prepare the full timeline of a bill, lots-of-flags style
+      timeline = {}
+      
+      timeline[:introduced_at] = Time.parse doc.at(:introduced)['datetime']
+      
+      if house_vote = votes.select {|vote| vote[:chamber] == 'house' and vote[:type] != 'override'}.last
+        timeline[:house_result] = house_vote[:result]
+        timeline[:house_result_at] = house_vote[:voted_at]
+      end
+      
+      if senate_vote = votes.select {|vote| vote[:chamber] == 'senate' and vote[:type] != 'override'}.last
+        timeline[:senate_result] = senate_vote[:result]
+        timeline[:senate_result_at] = senate_vote[:voted_at]
+      end
+      
+      if concurring_vote = votes.select {|vote| vote[:type] == 'vote2'}.last
+        timeline[:passed] = concurring_vote[:result] == 'pass'
+        timeline[:passed_at] = concurring_vote[:voted_at]
+      else
+        timeline[:passed] = false
+      end
+      
+      if vetoed_action = doc.at('//actions/vetoed')
+        timeline[:vetoed_at] = Time.parse vetoed_action['datetime']
+        timeline[:vetoed] = true
+      else
+        timeline[:vetoed] = false
+      end
+      
+      if override_house_vote = votes.select {|vote| vote[:chamber] == 'house' and vote[:type] == 'override'}.last
+        timeline[:override_house_result] = override_house_vote[:result]
+        timeline[:override_house_result_at] = override_house_vote[:voted_at]
+      end
+      
+      if override_senate_vote = votes.select {|vote| vote[:chamber] == 'senate' and vote[:type] == 'override'}.last
+        timeline[:override_senate_result] = override_senate_vote[:result]
+        timeline[:override_senate_result_at] = override_senate_vote[:voted_at]
+      end
+      
+      if enacted_action = doc.at('//actions/enacted')
+        timeline[:enacted_at] = Time.parse enacted_action['datetime']
+        timeline[:enacted] = true
+      else
+        timeline[:enacted] = false
+      end
+      
+      # finally, set the awaiting_signature flag, inferring it from the details above
+      if timeline[:passed] and !timeline[:vetoed] and !timeline[:enacted] and topresident_action = doc.search('//actions/topresident').last
+        timeline[:awaiting_signature_since] = Time.parse topresident_action['datetime']
+        timeline[:awaiting_signature] = true
+      else
+        timeline[:awaiting_signature] = false
+      end
+      
+      bill.attributes = timeline
+      
       
       if bill.save
         count += 1
@@ -145,70 +209,6 @@ class Bill
     Report.failure self, "Exception while saving Bills. Attached exception to this message.", {:exception => {:backtrace => exception.backtrace, :message => exception.message}}
   end
   
-  # This method is going to get run *after* Bill.update and Roll.update
-  # In Bill.update, we set aside the voice votes present in the bill's actions
-  # into the Bill's "votes" field. This method is meant to take the roll call votes
-  # we picked up in Roll.update and integrate them alongside those voice votes,
-  # in order of the vote timestamp.
-  # 
-  # In case you're wondering, we don't pick up all roll call votes when we first process
-  # the action list, because not all roll call votes are linked through those actions.
-  # Some are, but many are just described in the text and there is no identifier or way of
-  # referring consistently to the roll call vote taken. The roll call XML files, on the other
-  # hand, consistently reference the bill they are about.
-  # 
-  # This also sets the last_vote_at timestamp, since we don't know it until we complete
-  # this voice/roll-call vote integration process.
-  def self.update_votes(session = nil)
-    bad_bills = []
-    count = 0
-    start = Time.now
-    
-    session ||= current_session
-    
-    bills = Bill.all :conditions => {:session => current_session.to_s} #, :limit => 20 # debug
-    
-    bills.each do |bill|
-      voice_votes = bill.votes.select {|vote| vote['how'] == 'voice'} # select as a sanity check
-      roll_votes = Roll.find_all_by_bill_id(bill.bill_id).map do |roll|
-        # using quotes for certain keys for consistency with voice vote keys
-        # once pulled from the database
-        {'how' => "roll", 'vote' => {
-          :chamber => roll.chamber,
-          :question => roll.question,
-          :type => roll.type,
-          'voted_at' => roll.voted_at,
-          :result => roll.result,
-          :vote_breakdown => roll.vote_breakdown,
-          :roll_id => roll.roll_id
-        }}
-      end
-      
-      # puts "Updating bill #{bill.bill_id} with #{voice_votes.size} voice votes and #{roll_votes.size} roll call votes."
-      
-      votes = (voice_votes + roll_votes).sort_by {|v| v['vote']['voted_at']}
-      
-      bill.attributes = {
-        :votes => votes,
-        :votes_count => votes.size,
-        :last_vote_at => votes.last ? votes.last['vote']['voted_at'] : nil
-      }
-      
-      if bill.save
-        count += 1
-      else
-        bad_bills << {:attributes => bill.attributes, :error_messages => bill.errors.full_messages}
-      end
-    end
-    
-    if bad_bills.any?
-      Report.failure self, "Failed to save #{bad_bills.size} bills. Attached the last failed bill's attributes and errors.", bad_bills.last
-    end
-    
-    Report.success self, "Updated voice and roll call votes for #{count} bills.", {:elapsed_time => Time.now - start}
-    
-    count
-  end
   
   def self.summary_for(doc)
     summary = doc.at(:summary).inner_text.strip
@@ -256,25 +256,30 @@ class Bill
     end
   end
   
-  def self.voice_votes_for(doc)
+  def self.votes_for(doc)
     chamber = {'h' => 'house', 's' => 'senate'}
-    doc.search('//actions/vote[@how!="roll"]|//actions/vote2[@how!="roll"]|//actions/vote-aux[@how!="roll"]').map do |vote|
-      # using strings for certain keys for consistency in comparison later 
-      # when they are fetched from the database
-      {'how' => vote['how'].downcase, 'vote' => {
+    doc.search('//actions/vote|//actions/vote2|//actions/vote-aux').map do |vote|
+      voted_at = Time.parse vote['datetime']
+      chamber_code = vote['where']
+      how = vote['how']
+      
+      result = {
+        :how => how,
         :result => vote['result'], 
-        'voted_at' => Time.parse(vote['datetime']),
-        :question => (vote/:text).inner_text,
-        :chamber => chamber[vote['where']]
-      }}
+        :voted_at => voted_at,
+        :text => (vote/:text).inner_text,
+        :chamber => chamber[chamber_code],
+        :type => vote['type']
+      }
+      
+      if vote['roll'].present?
+        result[:roll_id] = "#{chamber_code}#{vote['roll']}-#{voted_at.year}"
+      end
+      
+      result
     end
   end
   
-  def self.enacted_at_for(doc)
-    if enacted = doc.at('//actions/enacted')
-      Time.parse enacted['datetime']
-    end
-  end
   
   def self.legislator_for(govtrack_id, legislators, missing_ids)
     legislator = legislators[govtrack_id]
