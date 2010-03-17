@@ -297,40 +297,11 @@ class Bill
   
   # statistics functions
   
-  def self.bills_sponsored(legislator)
-    Bill.count :conditions => {
-      :sponsor_id => legislator.bioguide_id,
-      :chamber => legislator.chamber,
-      :session => current_session.to_s,
-      :type => {'house' => 'hr', 'senate' => 's'}[legislator.chamber]
-    }
-  end
-  
-  def self.bills_cosponsored(legislator)
-    Bill.count :conditions => {
-      :cosponsor_ids => legislator.bioguide_id,
-      :chamber => legislator.chamber,
-      :session => current_session.to_s,
-      :type => {'house' => 'hr', 'senate' => 's'}[legislator.chamber]
-    }
-  end
-  
-  def self.resolutions_sponsored(legislator)
-    Bill.count :conditions => {
-      :sponsor_id => legislator.bioguide_id,
-      :chamber => legislator.chamber,
-      :session => current_session.to_s,
-      :type => {"$in" => {'house' => ['hcres', 'hres', 'hjres'], 'senate' => ['scres', 'sres', 'sjres']}[legislator.chamber]}
-    }
-  end
-  
-  def self.resolutions_cosponsored(legislator)
-    Bill.count :conditions => {
-      :cosponsor_ids => legislator.bioguide_id,
-      :chamber => legislator.chamber,
-      :session => current_session.to_s,
-      :type => {"$in" => {'house' => ['hcres', 'hres', 'hjres'], 'senate' => ['scres', 'sres', 'sjres']}[legislator.chamber]}
-    }
+  def self.bills_sponsored_where(bioguide_id, options = {})
+    count(:conditions => {
+      :type => ["hr", "s", "hjres", "sjres"],
+      :sponsor_id => bioguide_id
+    }.merge(options))
   end
   
   def self.format_time(time)

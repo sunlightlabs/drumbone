@@ -17,7 +17,7 @@ namespace :update do
     Bill.update
     Roll.update
     
-    Legislator.update_statistics
+    Legislator.update_sponsorships
     Legislator.update_contracts
     Legislator.update_earmarks
   end

@@ -86,23 +86,23 @@ class Legislator
     Report.success "Earmarks", "Updated earmark information for all active legislators", {:elapsed_time => Time.now - start}
   end
   
-  def self.update_statistics
+  def self.update_sponsorships
     start = Time.now
     legislators = all :conditions => {:in_office => true}
     
     legislators.each do |legislator|
       legislator.attributes = {
-        :statistics => {
-          :bills_sponsored => Bill.bills_sponsored(legislator),
-          :bills_cosponsored => Bill.bills_cosponsored(legislator),
-          :resolutions_sponsored => Bill.resolutions_sponsored(legislator),
-          :resolutions_cosponsored => Bill.resolutions_cosponsored(legislator)
+        :sponsorships => {
+          :introduced => legislator.bills_sponsored,
+          :passed_house => legislator.bills_sponsored_passed_house,
+          :passed_senate => legislator.bills_sponsored_passed_senate,
+          :enacted => legislator.bills_sponsored_enacted
         }
       }
       legislator.save
     end
     
-    Report.success "Statistics", "Updated bill statistics for all active legislators", {:elapsed_time => Time.now - start}
+    Report.success "Sponsorships", "Updated bill sponsorship stats for all active legislators", {:elapsed_time => Time.now - start}
   end
   
   def self.update_contracts
@@ -213,6 +213,22 @@ class Legislator
     end
     
     Report.success self, "Initialized #{initialized_count} out-of-office legislators.", {:elapsed_time => Time.now - start}
+  end
+  
+  def bills_sponsored
+    Bill.bills_sponsored_where bioguide_id
+  end
+  
+  def bills_sponsored_passed_house
+    Bill.bills_sponsored_where bioguide_id, :house_result => 'pass'
+  end
+  
+  def bills_sponsored_passed_senate
+    Bill.bills_sponsored_where bioguide_id, :senate_result => 'pass'
+  end
+  
+  def bills_sponsored_enacted
+    Bill.bills_sponsored_where bioguide_id, :enacted => true
   end
   
   def self.attributes_from(api_legislator)
