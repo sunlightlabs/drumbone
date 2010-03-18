@@ -190,11 +190,11 @@ class BillTest < Test::Unit::TestCase
       
       cases[name].each do |key, value|
         if value == :missing
-          assert !timeline.key?(key), "#{name}: #{key}"
+          assert !timeline.key?(key)
         elsif value == :not_null
-          assert_not_nil timeline[key], "#{name}: #{key}"
+          assert_not_nil timeline[key]
         else
-          assert_equal value, timeline[key], "#{name}: #{key}"
+          assert_equal value, timeline[key]
         end
       end
     end
