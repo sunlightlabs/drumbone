@@ -183,7 +183,7 @@ class BillTest < Test::Unit::TestCase
       }
     }
     
-    cases.each do |name, timeline|
+    cases.keys.each do |name|
       doc = Hpricot.XML open("test/fixtures/timeline/#{name}.xml")
       votes = Bill.votes_for doc
       timeline = Bill.timeline_for doc, votes
