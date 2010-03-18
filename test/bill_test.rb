@@ -35,4 +35,170 @@ class BillTest < Test::Unit::TestCase
     end
   end
   
+  def test_timeline_construction
+    cases = {
+      :introduced => {
+        :house_result => :missing,
+        :house_result_at => :missing, 
+        :senate_result => :missing,
+        :senate_result_at => :missing, 
+        :passed => false,
+        :passed_at => :missing,  
+        :enacted => false,
+        :enacted_at => :missing,  
+        :vetoed => false,
+        :vetoed_at => :missing,
+        :override_house_result => :missing,
+        :override_house_result_at => :missing, 
+        :override_senate_result => :missing, 
+        :override_senate_result_at => :missing,
+        :awaiting_signature => false,
+        :awaiting_signature_since => :missing
+      },
+      :enacted_normal => {
+        :house_result => 'pass',
+        :house_result_at => :not_null, 
+        :senate_result => 'pass',
+        :senate_result_at => :not_null, 
+        :passed => true,
+        :passed_at => :not_null,  
+        :enacted => true,
+        :enacted_at => :not_null,
+        :vetoed => false,
+        :vetoed_at => :missing,
+        :override_house_result => :missing,
+        :override_house_result_at => :missing, 
+        :override_senate_result => :missing, 
+        :override_senate_result_at => :missing,
+        :awaiting_signature => false,
+        :awaiting_signature_since => :missing
+      },
+      :veto_override_failed => {
+        :house_result => 'pass',
+        :house_result_at => :not_null, 
+        :senate_result => 'pass',
+        :senate_result_at => :not_null, 
+        :passed => true,
+        :passed_at => :not_null,  
+        :enacted => false,
+        :enacted_at => :missing,
+        :vetoed => true,
+        :vetoed_at => :not_null,
+        :override_house_result => 'fail',
+        :override_house_result_at => :not_null, 
+        :override_senate_result => :missing, 
+        :override_senate_result_at => :missing,
+        :awaiting_signature => false,
+        :awaiting_signature_since => :missing
+      },
+      :veto_override_passed => {
+        :house_result => 'pass',
+        :house_result_at => :not_null, 
+        :senate_result => 'pass',
+        :senate_result_at => :not_null, 
+        :passed => true,
+        :passed_at => :not_null,  
+        :enacted => true,
+        :enacted_at => :not_null,
+        :vetoed => true,
+        :vetoed_at => :not_null,
+        :override_house_result => 'pass',
+        :override_house_result_at => :not_null, 
+        :override_senate_result => 'pass', 
+        :override_senate_result_at => :not_null,
+        :awaiting_signature => false,
+        :awaiting_signature_since => :missing
+      },
+      :passed_house_only => {
+        :house_result => 'pass',
+        :house_result_at => :not_null, 
+        :senate_result => :missing,
+        :senate_result_at => :missing, 
+        :passed => false,
+        :passed_at => :missing,  
+        :enacted => false,
+        :enacted_at => :missing,
+        :vetoed => false,
+        :vetoed_at => :missing,
+        :override_house_result => :missing,
+        :override_house_result_at => :missing, 
+        :override_senate_result => :missing, 
+        :override_senate_result_at => :missing,
+        :awaiting_signature => false,
+        :awaiting_signature_since => :missing
+      },
+      :enacted_but_one_vote => {
+        :house_result => :missing,
+        :house_result_at => :missing, 
+        :senate_result => 'pass',
+        :senate_result_at => :not_null, 
+        :passed => true,
+        :passed_at => :not_null,  
+        :enacted => true,
+        :enacted_at => :not_null,
+        :vetoed => false,
+        :vetoed_at => :missing,
+        :override_house_result => :missing,
+        :override_house_result_at => :missing, 
+        :override_senate_result => :missing, 
+        :override_senate_result_at => :missing,
+        :awaiting_signature => false,
+        :awaiting_signature_since => :missing
+      },
+      :passed_awaiting_signature => {
+        :house_result => 'pass',
+        :house_result_at => :not_null, 
+        :senate_result => 'pass',
+        :senate_result_at => :not_null, 
+        :passed => true,
+        :passed_at => :not_null,  
+        :enacted => false,
+        :enacted_at => :missing,
+        :vetoed => false,
+        :vetoed_at => :missing,
+        :override_house_result => :missing,
+        :override_house_result_at => :missing, 
+        :override_senate_result => :missing, 
+        :override_senate_result_at => :missing,
+        :awaiting_signature => true,
+        :awaiting_signature_since => :not_null
+      },
+      :passed_awaiting_conference => {
+        :house_result => 'pass',
+        :house_result_at => :not_null, 
+        :senate_result => 'pass',
+        :senate_result_at => :not_null, 
+        :passed => true,
+        :passed_at => :not_null,  
+        :enacted => false,
+        :enacted_at => :missing,
+        :vetoed => false,
+        :vetoed_at => :missing,
+        :override_house_result => :missing,
+        :override_house_result_at => :missing, 
+        :override_senate_result => :missing, 
+        :override_senate_result_at => :missing,
+        :awaiting_signature => false,
+        :awaiting_signature_since => :missing
+      }
+    }
+    
+    cases.each do |name, timeline|
+      doc = Hpricot.XML open("test/fixtures/timeline/#{name}.xml")
+      votes = Bill.votes_for doc
+      timeline = Bill.timeline_for doc, votes
+      
+      cases[name].each do |key, value|
+        if value == :missing
+          assert !timeline.key?(key), "#{name}: #{key}"
+        elsif value == :not_null
+          assert_not_nil timeline[key], "#{name}: #{key}"
+        else
+          assert_equal value, timeline[key], "#{name}: #{key}"
+        end
+      end
+    end
+    
+  end
+  
 end

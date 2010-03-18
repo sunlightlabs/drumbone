@@ -103,6 +103,7 @@ class Bill
       state = doc.at(:state) ? doc.at(:state).inner_text : "UNKNOWN"
       votes = votes_for doc
       last_voted_at = votes.last ? votes.last[:voted_at] : nil
+      introduced_at = Time.parse doc.at(:introduced)['datetime']
       
       bill.attributes = {
         :filename => filename,
@@ -126,65 +127,12 @@ class Bill
         :last_action => actions.last,
         :last_action_at => actions.last ? actions.last[:acted_at] : nil,
         :votes => votes,
-        :last_voted_at => last_voted_at
+        :last_voted_at => last_voted_at,
+        :introduced_at => introduced_at
       }
       
-      # prepare the full timeline of a bill, lots-of-flags style
-      timeline = {}
-      
-      timeline[:introduced_at] = Time.parse doc.at(:introduced)['datetime']
-      
-      if house_vote = votes.select {|vote| vote[:chamber] == 'house' and vote[:type] != 'override'}.last
-        timeline[:house_result] = house_vote[:result]
-        timeline[:house_result_at] = house_vote[:voted_at]
-      end
-      
-      if senate_vote = votes.select {|vote| vote[:chamber] == 'senate' and vote[:type] != 'override'}.last
-        timeline[:senate_result] = senate_vote[:result]
-        timeline[:senate_result_at] = senate_vote[:voted_at]
-      end
-      
-      if concurring_vote = votes.select {|vote| vote[:type] == 'vote2'}.last
-        timeline[:passed] = concurring_vote[:result] == 'pass'
-        timeline[:passed_at] = concurring_vote[:voted_at]
-      else
-        timeline[:passed] = false
-      end
-      
-      if vetoed_action = doc.at('//actions/vetoed')
-        timeline[:vetoed_at] = Time.parse vetoed_action['datetime']
-        timeline[:vetoed] = true
-      else
-        timeline[:vetoed] = false
-      end
-      
-      if override_house_vote = votes.select {|vote| vote[:chamber] == 'house' and vote[:type] == 'override'}.last
-        timeline[:override_house_result] = override_house_vote[:result]
-        timeline[:override_house_result_at] = override_house_vote[:voted_at]
-      end
-      
-      if override_senate_vote = votes.select {|vote| vote[:chamber] == 'senate' and vote[:type] == 'override'}.last
-        timeline[:override_senate_result] = override_senate_vote[:result]
-        timeline[:override_senate_result_at] = override_senate_vote[:voted_at]
-      end
-      
-      if enacted_action = doc.at('//actions/enacted')
-        timeline[:enacted_at] = Time.parse enacted_action['datetime']
-        timeline[:enacted] = true
-      else
-        timeline[:enacted] = false
-      end
-      
-      # finally, set the awaiting_signature flag, inferring it from the details above
-      if timeline[:passed] and !timeline[:vetoed] and !timeline[:enacted] and topresident_action = doc.search('//actions/topresident').last
-        timeline[:awaiting_signature_since] = Time.parse topresident_action['datetime']
-        timeline[:awaiting_signature] = true
-      else
-        timeline[:awaiting_signature] = false
-      end
-      
+      timeline = timeline_for doc, votes
       bill.attributes = timeline
-      
       
       if bill.save
         count += 1
@@ -238,6 +186,62 @@ class Bill
         :title => title.inner_text
       }
     end
+  end
+  
+  # prepare the full timeline of a bill, lots-of-flags style
+  def self.timeline_for(doc, votes)
+    timeline = {}
+    
+    if house_vote = votes.select {|vote| vote[:chamber] == 'house' and vote[:type] != 'override'}.last
+      timeline[:house_result] = house_vote[:result]
+      timeline[:house_result_at] = house_vote[:voted_at]
+    end
+    
+    if senate_vote = votes.select {|vote| vote[:chamber] == 'senate' and vote[:type] != 'override'}.last
+      timeline[:senate_result] = senate_vote[:result]
+      timeline[:senate_result_at] = senate_vote[:voted_at]
+    end
+    
+    if concurring_vote = votes.select {|vote| vote[:type] == 'vote2'}.last
+      timeline[:passed] = concurring_vote[:result] == 'pass'
+      timeline[:passed_at] = concurring_vote[:voted_at]
+    else
+      timeline[:passed] = false
+    end
+    
+    if vetoed_action = doc.at('//actions/vetoed')
+      timeline[:vetoed_at] = Time.parse vetoed_action['datetime']
+      timeline[:vetoed] = true
+    else
+      timeline[:vetoed] = false
+    end
+    
+    if override_house_vote = votes.select {|vote| vote[:chamber] == 'house' and vote[:type] == 'override'}.last
+      timeline[:override_house_result] = override_house_vote[:result]
+      timeline[:override_house_result_at] = override_house_vote[:voted_at]
+    end
+    
+    if override_senate_vote = votes.select {|vote| vote[:chamber] == 'senate' and vote[:type] == 'override'}.last
+      timeline[:override_senate_result] = override_senate_vote[:result]
+      timeline[:override_senate_result_at] = override_senate_vote[:voted_at]
+    end
+    
+    if enacted_action = doc.at('//actions/enacted')
+      timeline[:enacted_at] = Time.parse enacted_action['datetime']
+      timeline[:enacted] = true
+    else
+      timeline[:enacted] = false
+    end
+    
+    # finally, set the awaiting_signature flag, inferring it from the details above
+    if timeline[:passed] and !timeline[:vetoed] and !timeline[:enacted] and topresident_action = doc.search('//actions/topresident').last
+      timeline[:awaiting_signature_since] = Time.parse topresident_action['datetime']
+      timeline[:awaiting_signature] = true
+    else
+      timeline[:awaiting_signature] = false
+    end
+    
+    timeline
   end
   
   def self.most_recent_title_from(titles, type)
