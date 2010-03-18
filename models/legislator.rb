@@ -111,8 +111,8 @@ class Legislator
     
     count = 0
     
-    representatives = Legislator.all :conditions => {:chamber => 'House', :in_office => true}
-    senators = Legislator.all :conditions => {:chamber => 'Senate', :in_office => true}
+    representatives = Legislator.all :conditions => {:chamber => 'house', :in_office => true}
+    senators = Legislator.all :conditions => {:chamber => 'senate', :in_office => true}
     
     states = MongoMapper.database.collection(:legislators).distinct :state
     state_info = {}
