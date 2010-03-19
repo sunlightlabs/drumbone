@@ -41,17 +41,15 @@ class Legislator
     }
     
     FasterCSV.foreach("data/earmarks/earmark_totals.csv") do |row|
-      fiscal_year = row[0]
-      rank = row[1]
-      crp_id = row[2]
-      amount = row[3].to_i
+      fiscal_year = row[0].to_i
+      bioguide_id = row[1]
+      amount = row[2].to_i
+      number = row[3].to_i
       chamber = row[4]
-      number = row[5].to_i
       
-      results[crp_id] = {
+      results[bioguide_id] = {
         :total_amount => amount,
         :total_number => number,
-        :rank => rank,
         :fiscal_year => fiscal_year
       }
       
@@ -71,10 +69,12 @@ class Legislator
       }
     }
     
-    all(:conditions => {:in_office => true}).each do |legislator|
-      if results[legislator.crp_id]
+    all.each do |legislator|
+      if results[legislator.bioguide_id]
+        # puts "[#{legislator.bioguide_id}] Adding earmark data"
+        
         legislator.attributes = {
-          :earmarks => results[legislator.crp_id].merge({
+          :earmarks => results[legislator.bioguide_id].merge({
              :average_amount => averages[legislator.chamber.to_sym][:amount],
              :average_number => averages[legislator.chamber.to_sym][:number]
           })
