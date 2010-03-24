@@ -302,10 +302,11 @@ class Bill
   # statistics functions
   
   def self.bills_sponsored_where(bioguide_id, options = {})
-    count(:conditions => {
-      :type => ["hr", "s", "hjres", "sjres"],
-      :sponsor_id => bioguide_id
-    }.merge(options))
+    count(:conditions => {:sponsor_id => bioguide_id}.merge(options))
+  end
+  
+  def self.bills_cosponsored_where(bioguide_id, options = {})
+    count(:conditions => {:cosponsor_ids => bioguide_id}.merge(options))
   end
   
   def self.format_time(time)

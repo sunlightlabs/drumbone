@@ -92,39 +92,33 @@ class Legislator
     
     results = {}
     totals = {
-      :house => {:introduced => 0, :passed_house => 0, :passed_senate => 0, :enacted => 0, :n => 0}, 
-      :senate => {:introduced => 0, :passed_house => 0, :passed_senate => 0, :enacted => 0, :n => 0}
+      :house => {:sponsored => 0, :cosponsored => 0, :n => 0}, 
+      :senate => {:sponsored => 0, :cosponsored => 0, :n => 0}
     }
     
     legislators.each do |legislator|
       results[legislator.bioguide_id] = {
-        :introduced => legislator.bills_sponsored,
-        :passed_house => legislator.bills_sponsored_passed_house,
-        :passed_senate => legislator.bills_sponsored_passed_senate,
-        :enacted => legislator.bills_sponsored_enacted
+        :sponsored => legislator.bills_sponsored,
+        :cosponsored => legislator.bills_cosponsored,
+        :sponsored_enacted => legislator.bills_sponsored_enacted,
+        :cosponsored_enacted => legislator.bills_cosponsored_enacted
       }
       
       chamber = legislator.chamber.downcase.to_sym
-      totals[chamber][:introduced] += results[legislator.bioguide_id][:introduced]
-      totals[chamber][:passed_house] += results[legislator.bioguide_id][:passed_house]
-      totals[chamber][:passed_senate] += results[legislator.bioguide_id][:passed_senate]
-      totals[chamber][:enacted] += results[legislator.bioguide_id][:enacted]
+      totals[chamber][:sponsored] += results[legislator.bioguide_id][:sponsored]
+      totals[chamber][:cosponsored] += results[legislator.bioguide_id][:cosponsored]
       totals[chamber][:n] += 1
     end
     
     
     averages = {
       :house => {
-        :introduced => (totals[:house][:introduced].to_f / totals[:house][:n].to_f).to_i,
-        :passed_house => (totals[:house][:passed_house].to_f / totals[:house][:n].to_f).to_i,
-        :passed_senate => (totals[:house][:passed_senate].to_f / totals[:house][:n].to_f).to_i,
-        :enacted => (totals[:house][:enacted].to_f / totals[:house][:n].to_f).to_i
+        :sponsored => (totals[:house][:sponsored].to_f / totals[:house][:n].to_f).to_i,
+        :cosponsored => (totals[:house][:cosponsored].to_f / totals[:house][:n].to_f).to_i
       },
       :senate => {
-        :introduced => (totals[:senate][:introduced].to_f / totals[:senate][:n].to_f).to_i,
-        :passed_house => (totals[:senate][:passed_house].to_f / totals[:senate][:n].to_f).to_i,
-        :passed_senate => (totals[:senate][:passed_senate].to_f / totals[:senate][:n].to_f).to_i,
-        :enacted => (totals[:senate][:enacted].to_f / totals[:senate][:n].to_f).to_i
+        :sponsored => (totals[:senate][:sponsored].to_f / totals[:senate][:n].to_f).to_i,
+        :cosponsored => (totals[:senate][:cosponsored].to_f / totals[:senate][:n].to_f).to_i
       }
     }
     
@@ -259,16 +253,16 @@ class Legislator
     Bill.bills_sponsored_where bioguide_id
   end
   
-  def bills_sponsored_passed_house
-    Bill.bills_sponsored_where bioguide_id, :house_result => 'pass'
-  end
-  
-  def bills_sponsored_passed_senate
-    Bill.bills_sponsored_where bioguide_id, :senate_result => 'pass'
-  end
-  
   def bills_sponsored_enacted
     Bill.bills_sponsored_where bioguide_id, :enacted => true
+  end
+  
+  def bills_cosponsored
+    Bill.bills_cosponsored_where bioguide_id
+  end
+  
+  def bills_cosponsored_enacted
+    Bill.bills_cosponsored_where bioguide_id, :enacted => true
   end
   
   def self.attributes_from(api_legislator)
