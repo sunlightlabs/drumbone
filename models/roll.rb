@@ -56,14 +56,14 @@ class Roll
     
     # make lookups faster later by caching a hash of legislators from which we can lookup govtrack_ids
     legislators = {}
-    Legislator.all(:fields => [:first_name, :nickname, :last_name, :name_suffix, :title, :state, :party, :govtrack_id, :bioguide_id]).each do |legislator|
+    Legislator.all(:fields => voter_fields).each do |legislator|
       legislators[legislator.govtrack_id] = legislator
     end
     
     
     # Debug helpers
     rolls = Dir.glob "data/govtrack/#{session}/rolls/*.xml"
-    # rolls = Dir.glob "data/govtrack/#{session}/rolls/h2009-143.xml"
+    # rolls = Dir.glob "data/govtrack/#{session}/rolls/h2010-165.xml"
     # rolls = rolls.first 20
     
     rolls.each do |path|
@@ -137,11 +137,11 @@ class Roll
   end
   
   def self.bill_for(bill_id)
-    bill = Bill.first :conditions => {:bill_id => bill_id}, :fields => bill_fields
+    bill = Bill.first :conditions => {:bill_id => bill_id}, :fields => Bill.basic_fields
     
     if bill
       attributes = bill.attributes
-      allowed_keys = bill_fields.map {|f| f.to_s}
+      allowed_keys = Bill.basic_fields.map {|f| f.to_s}
       attributes.keys.each {|key| attributes.delete key unless allowed_keys.include?(key)}
       attributes
     else
