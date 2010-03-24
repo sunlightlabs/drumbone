@@ -127,10 +127,8 @@ class Legislator
       chamber = legislator.chamber.downcase.to_sym
       legislator.attributes = {
         :sponsorships => results[legislator.bioguide_id].merge({
-          :average_introduced => averages[chamber][:introduced],
-          :average_passed_house => averages[chamber][:passed_house],
-          :average_passed_senate => averages[chamber][:passed_senate],
-          :average_enacted => averages[chamber][:enacted]
+          :average_sponsored => averages[chamber][:sponsored],
+          :average_cosponsored => averages[chamber][:cosponsored],
         })
       }
       legislator.save
