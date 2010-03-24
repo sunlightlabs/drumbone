@@ -90,14 +90,54 @@ class Legislator
     start = Time.now
     legislators = all :conditions => {:in_office => true}
     
+    results = {}
+    totals = {
+      :house => {:introduced => 0, :passed_house => 0, :passed_senate => 0, :enacted => 0, :n => 0}, 
+      :senate => {:introduced => 0, :passed_house => 0, :passed_senate => 0, :enacted => 0, :n => 0}
+    }
+    
     legislators.each do |legislator|
+      results[legislator.bioguide_id] = {
+        :introduced => legislator.bills_sponsored,
+        :passed_house => legislator.bills_sponsored_passed_house,
+        :passed_senate => legislator.bills_sponsored_passed_senate,
+        :enacted => legislator.bills_sponsored_enacted
+      }
+      
+      chamber = legislator.chamber.downcase.to_sym
+      totals[chamber][:introduced] += results[legislator.bioguide_id][:introduced]
+      totals[chamber][:passed_house] += results[legislator.bioguide_id][:passed_house]
+      totals[chamber][:passed_senate] += results[legislator.bioguide_id][:passed_senate]
+      totals[chamber][:enacted] += results[legislator.bioguide_id][:enacted]
+      totals[chamber][:n] += 1
+    end
+    
+    
+    averages = {
+      :house => {
+        :introduced => (totals[:house][:introduced].to_f / totals[:house][:n].to_f).to_i,
+        :passed_house => (totals[:house][:passed_house].to_f / totals[:house][:n].to_f).to_i,
+        :passed_senate => (totals[:house][:passed_senate].to_f / totals[:house][:n].to_f).to_i,
+        :enacted => (totals[:house][:enacted].to_f / totals[:house][:n].to_f).to_i
+      },
+      :senate => {
+        :introduced => (totals[:senate][:introduced].to_f / totals[:senate][:n].to_f).to_i,
+        :passed_house => (totals[:senate][:passed_house].to_f / totals[:senate][:n].to_f).to_i,
+        :passed_senate => (totals[:senate][:passed_senate].to_f / totals[:senate][:n].to_f).to_i,
+        :enacted => (totals[:senate][:enacted].to_f / totals[:senate][:n].to_f).to_i
+      }
+    }
+    
+    
+    legislators.each do |legislator|
+      chamber = legislator.chamber.downcase.to_sym
       legislator.attributes = {
-        :sponsorships => {
-          :introduced => legislator.bills_sponsored,
-          :passed_house => legislator.bills_sponsored_passed_house,
-          :passed_senate => legislator.bills_sponsored_passed_senate,
-          :enacted => legislator.bills_sponsored_enacted
-        }
+        :sponsorships => results[legislator.bioguide_id].merge({
+          :average_introduced => averages[chamber][:introduced],
+          :average_passed_house => averages[chamber][:passed_house],
+          :average_passed_senate => averages[chamber][:passed_senate],
+          :average_enacted => averages[chamber][:enacted]
+        })
       }
       legislator.save
     end
