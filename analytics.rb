@@ -124,8 +124,6 @@ end
 class Hit
   include MongoMapper::Document
   
-  key :method, String, :required => true
-  key :key, String, :required => true
   timestamps!
   
   ensure_index :method
