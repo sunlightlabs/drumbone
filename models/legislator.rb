@@ -92,8 +92,8 @@ class Legislator
     
     results = {}
     totals = {
-      :house => {:sponsored => 0, :cosponsored => 0, :n => 0}, 
-      :senate => {:sponsored => 0, :cosponsored => 0, :n => 0}
+      :house => {:sponsored => 0, :cosponsored => 0, :sponsored_enacted => 0, :cosponsored_enacted => 0, :n => 0}, 
+      :senate => {:sponsored => 0, :cosponsored => 0, :sponsored_enacted => 0, :cosponsored_enacted => 0, :n => 0}
     }
     
     legislators.each do |legislator|
@@ -107,18 +107,24 @@ class Legislator
       chamber = legislator.chamber.downcase.to_sym
       totals[chamber][:sponsored] += results[legislator.bioguide_id][:sponsored]
       totals[chamber][:cosponsored] += results[legislator.bioguide_id][:cosponsored]
+      totals[chamber][:sponsored_enacted] += results[legislator.bioguide_id][:sponsored_enacted]
+      totals[chamber][:cosponsored_enacted] += results[legislator.bioguide_id][:cosponsored_enacted]
       totals[chamber][:n] += 1
     end
     
     
     averages = {
       :house => {
-        :sponsored => (totals[:house][:sponsored].to_f / totals[:house][:n].to_f).to_i,
-        :cosponsored => (totals[:house][:cosponsored].to_f / totals[:house][:n].to_f).to_i
+        :sponsored => (totals[:house][:sponsored].to_f / totals[:house][:n].to_f),
+        :cosponsored => (totals[:house][:cosponsored].to_f / totals[:house][:n].to_f),
+        :sponsored_enacted => (totals[:house][:sponsored_enacted].to_f / totals[:house][:n].to_f),
+        :cosponsored_enacted => (totals[:house][:cosponsored_enacted].to_f / totals[:house][:n].to_f)
       },
       :senate => {
-        :sponsored => (totals[:senate][:sponsored].to_f / totals[:senate][:n].to_f).to_i,
-        :cosponsored => (totals[:senate][:cosponsored].to_f / totals[:senate][:n].to_f).to_i
+        :sponsored => (totals[:senate][:sponsored].to_f / totals[:senate][:n].to_f),
+        :cosponsored => (totals[:senate][:cosponsored].to_f / totals[:senate][:n].to_f),
+        :sponsored_enacted => (totals[:senate][:sponsored_enacted].to_f / totals[:senate][:n].to_f),
+        :cosponsored_enacted => (totals[:senate][:cosponsored_enacted].to_f / totals[:senate][:n].to_f)
       }
     }
     
@@ -129,6 +135,8 @@ class Legislator
         :sponsorships => results[legislator.bioguide_id].merge({
           :average_sponsored => averages[chamber][:sponsored],
           :average_cosponsored => averages[chamber][:cosponsored],
+          :average_sponsored_enacted => averages[chamber][:sponsored_enacted],
+          :average_cosponsored_enacted => averages[chamber][:cosponsored_enacted]
         })
       }
       legislator.save
