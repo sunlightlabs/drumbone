@@ -4,13 +4,22 @@ require 'rubygems'
 require 'sinatra'
 require 'environment'
 
+not_found do
+  # If this is a JSONP request, and it did trigger one of the main routes, return an error response
+  # Otherwise, let it lapse into a normal content-less 404
+  
+  # If we don't do this, in-browser clients using JSONP have no way of detecting a problem
+  if params[:captures] and params[:captures][0] and params[:callback]
+    {:error => {:code => 404, :message => "#{params[:captures][0].capitalize} not found"}}.to_json
+  end
+end
 
 get /^\/api\/(legislator)\.(json)$/ do
   fields = fields_for Legislator, params[:sections]
   conditions = conditions_for Legislator.unique_keys, params
   
   unless conditions.any? and legislator = Legislator.first(:conditions => conditions, :fields => fields)
-    halt 404, "Legislator not found by that ID"
+    raise Sinatra::NotFound
   end
   
   json Legislator, attributes_for(legislator, fields), params[:callback]
@@ -21,7 +30,7 @@ get /^\/api\/(bill)\.(json)$/ do
   conditions = conditions_for Bill.unique_keys, params
   
   unless conditions.any? and bill = Bill.first(:conditions => conditions, :fields => fields)
-    raise Sinatra::NotFound, "Bill not found"
+    raise Sinatra::NotFound
   end
   
   json Bill, attributes_for(bill, fields), params[:callback]
@@ -32,7 +41,7 @@ get /^\/api\/(roll)\.(json)$/ do
   conditions = conditions_for Roll.unique_keys, params
   
   unless conditions.any? and roll = Roll.first(:conditions => conditions, :fields => fields)
-    raise Sinatra::NotFound, "Roll call not found"
+    raise Sinatra::NotFound
   end
   
   json Roll, attributes_for(roll, fields), params[:callback]

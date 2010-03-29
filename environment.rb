@@ -14,6 +14,9 @@ def config
   @config ||= YAML.load_file 'config/config.yml'
 end
 
+# We need to connect to Mongo first, then define the models, and then set the email settings
+# Thus the need for two configure blocks
+
 configure do
   Sunlight::Base.api_key = config[:sunlight_api_key]
   
