@@ -10,7 +10,9 @@ not_found do
   
   # If we don't do this, in-browser clients using JSONP have no way of detecting a problem
   if params[:captures] and params[:captures][0] and params[:callback]
-    {:error => {:code => 404, :message => "#{params[:captures][0].capitalize} not found"}}.to_json
+    json = {:error => {:code => 404, :message => "#{params[:captures][0].capitalize} not found"}}.to_json
+    jsonp = "#{params[:callback]}(#{json});";
+    halt 200, jsonp
   end
 end
 
