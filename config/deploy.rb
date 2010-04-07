@@ -2,13 +2,18 @@ set :environment, (ENV['target'] || 'staging')
 
 set :user, 'drumbone'
 set :application, user
-set :domain, 'drumbone.services.sunlightlabs.com'
+set :deploy_to, "/home/#{user}/"
+
+if environment == 'production'
+  set :domain, 'drumbone.services.sunlightlabs.com'
+else # environment == 'staging'
+  set :domain, 'drumbone.sunlightlabs.com'
+end
 
 set :scm, :git
 set :repository, "git://github.com/sunlightlabs/#{application}.git"
 set :branch, 'master'
 
-set :deploy_to, "/home/#{user}/"
 set :deploy_via, :remote_cache
 set :runner, user
 set :admin_runner, runner
