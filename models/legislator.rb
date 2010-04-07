@@ -34,7 +34,7 @@ class Legislator
   def self.update_earmarks
     start = Time.now
     
-    last_updated = File.read "data/earmarks/earmark_timestamp.txt"
+    last_updated = File.read("data/earmarks/earmark_timestamp.txt").strip
     
     results = {}
     totals = {
