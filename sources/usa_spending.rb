@@ -21,6 +21,9 @@ class UsaSpending
     
     doc = Hpricot.XML xml
     
+    data = doc.at "/usaspendingSearchResults/data"
+    last_updated = Time.parse data["compiled_from_government_data_last_released_on"]
+    
     top_contractors = doc.search("//top_contractor_parent_companies/contractor_parent_company").map do |company|
       {
         :rank => company['rank'],
@@ -32,7 +35,8 @@ class UsaSpending
     {
       :total_amount => doc.at("//data/record/totals/total_ObligatedAmount").inner_text.to_f,
       :total_contractors => doc.at("//data/record/totals/number_of_contractors").inner_text.to_i,
-      :top_contractors => top_contractors
+      :top_contractors => top_contractors,
+      :last_updated => last_updated
     }
   end
   
