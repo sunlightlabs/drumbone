@@ -139,7 +139,7 @@ helpers do
     # only match against field roots so that subobject requests can slip through
     fields = fields.map {|field| field.split('.').first}
     
-    [:created_at, :_id, :id].each {|field| attributes.delete field.to_s}
+    [:created_at, :updated_at, :_id, :id].each {|field| attributes.delete field.to_s}
     if fields.any?
       attributes.keys.each {|key| attributes.delete(key) unless fields.include?(key)}
     end

@@ -28,7 +28,7 @@ class Roll
   end
   
   def self.basic_fields
-    [:roll_id, :number, :year, :chamber, :session, :result, :bill_id, :voted_at, :updated_at, :type, :question, :required, :vote_breakdown]
+    [:roll_id, :number, :year, :chamber, :session, :result, :bill_id, :voted_at, :last_updated, :type, :question, :required, :vote_breakdown]
   end
   
   def self.voter_fields
@@ -104,7 +104,8 @@ class Roll
         :voter_ids => voter_ids,
         :voters => voters,
         :vote_breakdown => vote_breakdown,
-        :party_vote_breakdown => party_vote_breakdown
+        :party_vote_breakdown => party_vote_breakdown,
+        :last_updated => Time.now
       }
       
       if roll.save

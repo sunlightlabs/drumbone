@@ -37,7 +37,7 @@ class Bill
   
   def self.basic_fields
     [
-      :bill_id, :type, :code, :number, :session, :chamber, :updated_at, :state, 
+      :bill_id, :type, :code, :number, :session, :chamber, :last_updated, :state, 
       :short_title, :official_title, 
       :sponsor_id, :cosponsors_count, :votes_count, :last_action_at, :last_vote_at, 
       :introduced_at, :house_result, :house_result_at, :senate_result, :senate_result_at, :passed, :passed_at,
@@ -128,7 +128,8 @@ class Bill
         :last_action_at => actions.last ? actions.last[:acted_at] : nil,
         :votes => votes,
         :last_voted_at => last_voted_at,
-        :introduced_at => introduced_at
+        :introduced_at => introduced_at,
+        :last_updated => Time.now
       }
       
       timeline = timeline_for doc, votes

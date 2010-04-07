@@ -28,7 +28,7 @@ class Legislator
   end
   
   def self.basic_fields
-    [:updated_at, :bioguide_id, :govtrack_id, :chamber, :in_office, :first_name, :nickname, :last_name, :name_suffix, :state, :district, :party, :title, :gender, :phone, :website, :twitter_id, :youtube_url, :congress_office]
+    [:last_updated, :bioguide_id, :govtrack_id, :chamber, :in_office, :first_name, :nickname, :last_name, :name_suffix, :state, :district, :party, :title, :gender, :phone, :website, :twitter_id, :youtube_url, :congress_office]
   end
   
   def self.update_earmarks
@@ -195,7 +195,7 @@ class Legislator
   end
   
   def self.update
-    initialize if Legislator.count == 0
+    update_out_of_office
     
     active_count = 0
     inactive_count = 0
@@ -239,15 +239,19 @@ class Legislator
   end
   
   
-  def self.initialize
+  def self.update_out_of_office
     # puts "Initializing out-of-office legislators..."
     
     start = Time.now
     
     initialized_count = 0
     Sunlight::Legislator.all_where(:in_office => 0).each do |api_legislator|
-      legislator = Legislator.new :bioguide_id => api_legislator.bioguide_id
-      # puts "[Legislator #{legislator.bioguide_id}] Created"
+      if legislator = Legislator.first(:conditions => {:bioguide_id => api_legislator.bioguide_id})
+        # puts "[Legislator #{legislator.bioguide_id}] Updated"
+      else
+        legislator = Legislator.new :bioguide_id => api_legislator.bioguide_id
+        # puts "[Legislator #{legislator.bioguide_id}] Created"
+      end
       
       legislator.attributes = attributes_from api_legislator
       legislator.save
@@ -255,7 +259,7 @@ class Legislator
       initialized_count += 1
     end
     
-    Report.success self, "Initialized #{initialized_count} out-of-office legislators.", {:elapsed_time => Time.now - start}
+    Report.success self, "Created/updated #{initialized_count} out-of-office legislators.", {:elapsed_time => Time.now - start}
   end
   
   def bills_sponsored
@@ -301,7 +305,8 @@ class Legislator
       :website => api_legislator.website,
       :congress_office => api_legislator.congress_office,
       :twitter_id => api_legislator.twitter_id,
-      :youtube_url => api_legislator.youtube_url
+      :youtube_url => api_legislator.youtube_url,
+      :last_updated => Time.now
     }
   end
   
