@@ -34,6 +34,8 @@ class Legislator
   def self.update_earmarks
     start = Time.now
     
+    last_updated = File.read "data/earmarks/earmark_timestamp.txt"
+    
     results = {}
     totals = {
       'H' => {:amount => 0, :number => 0, :n => 0}, 
@@ -76,7 +78,8 @@ class Legislator
         legislator.attributes = {
           :earmarks => results[legislator.bioguide_id].merge({
              :average_amount => averages[legislator.chamber.to_sym][:amount],
-             :average_number => averages[legislator.chamber.to_sym][:number]
+             :average_number => averages[legislator.chamber.to_sym][:number],
+             :last_updated => last_updated
           })
         }
         legislator.save
