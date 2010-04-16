@@ -287,11 +287,7 @@ class Legislator
           'Del' => 'house',
           'Com' => 'house'
         }[api_legislator.title],
-      
-      :crp_id => api_legislator.crp_id,
       :govtrack_id => api_legislator.govtrack_id,
-      :votesmart_id => api_legislator.votesmart_id,
-      :fec_id => api_legislator.fec_id,
       :first_name => api_legislator.firstname,
       :nickname => api_legislator.nickname,
       :last_name => api_legislator.lastname,
