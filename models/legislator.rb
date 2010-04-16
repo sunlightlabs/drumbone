@@ -194,7 +194,7 @@ class Legislator
     Report.failure "Contracts", "Exception while fetching contract data from USASpending.gov, error attached", {:message => ex.message, :backtrace => ex.backtrace}
   end
   
-  def self.update
+  def self.update(options = {})
     update_out_of_office
     
     active_count = 0

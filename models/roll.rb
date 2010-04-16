@@ -39,8 +39,10 @@ class Roll
     Bill.basic_fields
   end
 
-  def self.update(session = nil)
-    session ||= Bill.current_session
+  # options:
+  #   session: The session of Congress to update
+  def self.update(options = {})
+    session = options[:session] || Bill.current_session
     count  = 0
     missing_ids = []
     bad_rolls = []

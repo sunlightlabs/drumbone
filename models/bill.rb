@@ -51,8 +51,10 @@ class Bill
     [:first_name, :nickname, :last_name, :name_suffix, :title, :state, :party, :district, :govtrack_id, :bioguide_id]
   end
   
-  def self.update(session = nil)
-    session ||= current_session
+  # options:
+  #   session: The session of Congress to update
+  def self.update(options = {})
+    session = options[:session] || current_session
     count = 0
     missing_ids = []
     bad_bills = []
