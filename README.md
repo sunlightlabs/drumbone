@@ -1,3 +1,6 @@
+**NOTE**: See more complete documentation, with better examples, on Sunlight's [official documentation for our APIs](http://services.sunlightlabs.com/docs/Drumbone_API/)
+
+
 Drumbone is a RESTful JSON API over data about legislators, bills, and roll call votes.  Unlike the [Sunlight Labs Congress API](http://services.sunlightlabs.com/docs/Sunlight%20Congress%20API/), all data is taken from existing APIs and data sources (especially [GovTrack](http://govtrack.us)); there is no original data here.  
 
 The name "Drumbone" is taken from the name of an instrument created from PVC pipes whose length can be adjusted as needed to create various sounds and music.  Accordingly, the purpose of Drumbone is to pipe in data from disparate sources, and redistribute it in the simplest and most flexible format possible.
@@ -59,20 +62,13 @@ Every field on the document is its own section. There is also a "magic" section 
 
 You can get more granular and request subsections by using the dot operator to dive down through the document (e.g. "contracts.total_amount", "voters.L000551"). Think of it as accessing the document as a JSON object in JavaScript.
 
-<script src="http://gist.github.com/364933.js?file=bill-sections.js"></script>
-<script src="http://gist.github.com/364933.js?file=bill-sections-nested.js"></script>
-
 ##### JSONP support
 
 Drumbone supports JSONP.  If you pass in a query string parameter named "callback", this will trigger a JSONP response, with the data wrapped inside a call to the value of the "callback" parameter.
 
-<script src="http://gist.github.com/364933.js?file=jsonp-bill.js"></script>
-
 **Important** - 404 errors are handled differently for JSONP requests.  Normally, if your call to a singular method ("legislator", "bill", "roll") doesn't have a result, you'll get a 404 error code.  However, since JSONP requests are typically done inside of a browser, using a script tag and not an XmlHttpRequest, your callback would simply never be executed if a 404 occurred.  
 
 For this reason, JSONP requests that would ordinarily result in a 404 will result in a **200** response code, whose response body will be a JSON document with a root key of "error".  Your JavaScript callback method should expect this possibility.
-
-<script src="http://gist.github.com/364933.js?file=jsonp-error.js"></script>
 
 ##### Pagination
 
