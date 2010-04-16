@@ -84,7 +84,7 @@ class Roll
       end
       
       bill_id = bill_id_for doc
-      voter_ids, voters = votes_for doc, legislators, missing_ids
+      voter_ids, voters = votes_for filename, doc, legislators, missing_ids
       party_vote_breakdown = vote_breakdown_for voters
       vote_breakdown = party_vote_breakdown.delete :total
       
@@ -186,7 +186,7 @@ class Roll
     breakdown
   end
   
-  def self.votes_for(doc, legislators, missing_ids)
+  def self.votes_for(filename, doc, legislators, missing_ids)
     voter_ids = {}
     voters = {}
     
@@ -201,7 +201,7 @@ class Roll
         voter_ids[bioguide_id] = vote
         voters[bioguide_id] = {:vote => vote, :voter => voter}
       else
-        missing_ids << govtrack_id
+        missing_ids << [govtrack_id, filename]
       end
     end
     

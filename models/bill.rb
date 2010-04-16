@@ -96,8 +96,8 @@ class Bill
         # puts "[Bill #{bill.bill_id}] About to be created"
       end
       
-      sponsor = sponsor_for doc, legislators, missing_ids
-      cosponsors = cosponsors_for doc, legislators, missing_ids
+      sponsor = sponsor_for filename, doc, legislators, missing_ids
+      cosponsors = cosponsors_for filename, doc, legislators, missing_ids
       actions = actions_for doc
       titles = titles_for doc
       state = doc.at(:state) ? doc.at(:state).inner_text : "UNKNOWN"
@@ -164,14 +164,14 @@ class Bill
     summary.present? ? summary : nil
   end
   
-  def self.sponsor_for(doc, legislators, missing_ids)
+  def self.sponsor_for(filename, doc, legislators, missing_ids)
     sponsor = doc.at :sponsor
-    sponsor and sponsor['id'] and !sponsor['withdrawn'] ? legislator_for(sponsor['id'], legislators, missing_ids) : nil
+    sponsor and sponsor['id'] and !sponsor['withdrawn'] ? legislator_for(filename, sponsor['id'], legislators, missing_ids) : nil
   end
   
-  def self.cosponsors_for(doc, legislators, missing_ids)
+  def self.cosponsors_for(filename, doc, legislators, missing_ids)
     cosponsors = (doc/:cosponsor).map do |cosponsor| 
-      cosponsor and cosponsor['id'] and !cosponsor['withdrawn'] ? legislator_for(cosponsor['id'], legislators, missing_ids) : nil
+      cosponsor and cosponsor['id'] and !cosponsor['withdrawn'] ? legislator_for(filename, cosponsor['id'], legislators, missing_ids) : nil
     end.compact
     cosponsors.any? ? cosponsors : nil
   end
@@ -286,7 +286,7 @@ class Bill
   end
   
   
-  def self.legislator_for(govtrack_id, legislators, missing_ids)
+  def self.legislator_for(filename, govtrack_id, legislators, missing_ids)
     legislator = legislators[govtrack_id]
     
     if legislator
@@ -295,7 +295,7 @@ class Bill
       attributes.keys.each {|key| attributes.delete key unless allowed_keys.include?(key)}
       attributes
     else
-      missing_ids << govtrack_id if missing_ids
+      missing_ids << [govtrack_id, filename] if missing_ids
       nil
     end
   end
