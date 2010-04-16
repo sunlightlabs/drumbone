@@ -102,7 +102,7 @@ class Bill
       cosponsors = cosponsors_for filename, doc, legislators, missing_ids
       actions = actions_for doc
       titles = titles_for doc
-      state = doc.at(:state) ? doc.at(:state).inner_text : "UNKNOWN"
+      state = state_for doc
       votes = votes_for doc
       last_voted_at = votes.last ? votes.last[:voted_at] : nil
       introduced_at = Time.parse doc.at(:introduced)['datetime']
@@ -160,6 +160,9 @@ class Bill
     Report.failure self, "Exception while saving Bills. Attached exception to this message.", {:exception => {:backtrace => exception.backtrace, :message => exception.message}}
   end
   
+  def self.state_for(doc)
+    doc.at(:state) ? doc.at(:state).inner_text : "UNKNOWN"
+  end
   
   def self.summary_for(doc)
     summary = doc.at(:summary).inner_text.strip
@@ -192,7 +195,7 @@ class Bill
   end
   
   # prepare the full timeline of a bill, lots-of-flags style
-  def self.timeline_for(doc, votes)
+  def self.timeline_for(doc, state, votes)
     timeline = {}
     
     if house_vote = votes.select {|vote| vote[:chamber] == 'house' and vote[:type] != 'override'}.last
@@ -206,8 +209,12 @@ class Bill
     end
     
     if concurring_vote = votes.select {|vote| vote[:type] == 'vote2'}.last
-      timeline[:passed] = concurring_vote[:result] == 'pass'
-      timeline[:passed_at] = concurring_vote[:voted_at]
+      if concurring_vote[:result] == 'pass' and state !~ /PASS_BACK/
+        timeline[:passed] = true
+        timeline[:passed_at] = concurring_vote[:voted_at]
+      else
+        timeline[:passed] = false
+      end
     else
       timeline[:passed] = false
     end

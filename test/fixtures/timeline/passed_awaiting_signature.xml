@@ -1,3 +1,4 @@
+<state datetime="2009-12-14T16:53:00-05:00">PASSED:BILL</state>
 <actions>
   <vote date="1264654800" how="by Unanimous Consent" datetime="2010-01-28" where="s" type="vote" result="pass" ><text>Introduced in the Senate, read twice, considered, read the third time, and passed without amendment by Unanimous Consent.</text><reference label="consideration" ref="CR S349-351"/><reference label="text as passed Senate" ref="CR S350-351"/></vote>
   <action datetime="2010-01-29"><text>Message on Senate action sent to the House.</text></action>

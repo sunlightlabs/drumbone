@@ -168,8 +168,8 @@ class BillTest < Test::Unit::TestCase
         :house_result_at => :not_null, 
         :senate_result => 'pass',
         :senate_result_at => :not_null, 
-        :passed => true,
-        :passed_at => :not_null,  
+        :passed => false,
+        :passed_at => :missing,
         :enacted => false,
         :enacted_at => :missing,
         :vetoed => false,
@@ -185,16 +185,17 @@ class BillTest < Test::Unit::TestCase
     
     cases.keys.each do |name|
       doc = Hpricot.XML open("test/fixtures/timeline/#{name}.xml")
+      state = Bill.state_for doc
       votes = Bill.votes_for doc
-      timeline = Bill.timeline_for doc, votes
+      timeline = Bill.timeline_for doc, state, votes
       
       cases[name].each do |key, value|
         if value == :missing
-          assert !timeline.key?(key)
+          assert !timeline.key?(key), "[#{name}] #{key}: #{value}"
         elsif value == :not_null
-          assert_not_nil timeline[key]
+          assert_not_nil timeline[key], "[#{name}] #{key}: #{value}"
         else
-          assert_equal value, timeline[key]
+          assert_equal value, timeline[key], "[#{name}] #{key}: #{value}"
         end
       end
     end
