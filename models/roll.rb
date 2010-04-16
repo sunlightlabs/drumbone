@@ -195,9 +195,9 @@ class Roll
       value = elem['value']
       govtrack_id = elem['id']
       voter = voter_for govtrack_id, legislators
-      bioguide_id = voter[:bioguide_id]
       
       if voter
+        bioguide_id = voter[:bioguide_id]
         voter_ids[bioguide_id] = vote
         voters[bioguide_id] = {:vote => vote, :voter => voter}
       else
