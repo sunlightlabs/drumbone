@@ -51,18 +51,8 @@ end
 
 get /^\/api\/(bills)\.(json)$/ do
   fields = fields_for Bill, params[:sections]
-  conditions = conditions_for Bill.search_keys, params
+  conditions = search_conditions_for Bill, params
   order = order_for Bill, params
-  
-  if conditions[:enacted]
-    if ["true", "1"].include? conditions[:enacted]
-      conditions[:enacted] = true
-    elsif ["false", "0"].include? conditions[:enacted]
-      conditions[:enacted] = false
-    else
-      conditions.delete :enacted
-    end
-  end
   
   bills = Bill.all({
     :conditions => conditions,
@@ -75,7 +65,7 @@ end
 
 get /^\/api\/(rolls)\.(json)$/ do
   fields = fields_for Roll, params[:sections]
-  conditions = conditions_for Roll.search_keys, params
+  conditions = search_conditions_for Roll, params
   order = order_for Roll, params
   
   rolls = Roll.all({
@@ -105,7 +95,21 @@ helpers do
   def conditions_for(keys, params)
     conditions = {}
     keys.each do |key|
-      conditions = conditions.merge(key => params[key]) if params[key]
+      conditions[key] = params[key] if params[key]
+    end
+    conditions
+  end
+  
+  def search_conditions_for(model, params)
+    conditions = {}
+    model.search_keys.keys.each do |key|
+      if params[key]
+        if model.search_keys[key] == Boolean
+          conditions[key] = (params[key] == "true") if ["true", "false"].include? params[key]
+        else
+          conditions[key] = params[key]
+        end
+      end
     end
     conditions
   end

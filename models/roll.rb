@@ -26,7 +26,11 @@ class Roll
   end
   
   def self.search_keys
-    [:bill_id, :chamber, :session]
+    {
+      :session => String,
+      :chamber => String, 
+      :bill_id => String
+    }
   end
   
   # the first one is used as the default

@@ -32,7 +32,13 @@ class Bill
   end
   
   def self.search_keys
-    [:sponsor_id, :cosponsor_ids, :chamber, :enacted, :session]
+    {
+      :session => String,
+      :chamber => String,
+      :sponsor_id => String, 
+      :cosponsor_ids => String, 
+      :enacted => Boolean
+    }
   end
   
   # the first one is used as the default
