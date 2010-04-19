@@ -19,6 +19,8 @@ class Roll
   ensure_index :type
   ensure_index :bill_id
   
+  # API interface methods
+  
   def self.unique_keys
     [:roll_id]
   end
@@ -27,10 +29,17 @@ class Roll
     [:bill_id, :chamber, :session]
   end
   
+  # the first one is used as the default
+  def self.order_keys
+    [:voted_at]
+  end
+  
   def self.basic_fields
     [:roll_id, :number, :year, :chamber, :session, :result, :bill_id, :voted_at, :last_updated, :type, :question, :required, :vote_breakdown]
   end
   
+  
+  # helper methods internally 
   def self.voter_fields
     [:first_name, :nickname, :last_name, :name_suffix, :title, :state, :party, :district, :govtrack_id, :bioguide_id]
   end

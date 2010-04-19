@@ -35,6 +35,11 @@ class Bill
     [:sponsor_id, :cosponsor_ids, :chamber, :enacted, :session]
   end
   
+  # the first one is used as the default
+  def self.order_keys
+    [:introduced_at, :enacted_at, :last_vote_at, :last_action_at]
+  end
+  
   def self.basic_fields
     [
       :bill_id, :type, :code, :number, :session, :chamber, :last_updated, :state, 

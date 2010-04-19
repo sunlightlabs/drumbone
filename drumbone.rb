@@ -52,6 +52,7 @@ end
 get /^\/api\/(bills)\.(json)$/ do
   fields = fields_for Bill, params[:sections]
   conditions = conditions_for Bill.search_keys, params
+  order = order_for Bill, params
   
   if conditions[:enacted]
     if ["true", "1"].include? conditions[:enacted]
@@ -66,7 +67,7 @@ get /^\/api\/(bills)\.(json)$/ do
   bills = Bill.all({
     :conditions => conditions,
     :fields => fields,
-    :order => "#{params[:order] || 'introduced_at'} DESC"
+    :order => order,
   }.merge(pagination_for(params)))
   
   json Bill, bills.map {|bill| attributes_for bill, fields}, params[:callback]
@@ -75,11 +76,12 @@ end
 get /^\/api\/(rolls)\.(json)$/ do
   fields = fields_for Roll, params[:sections]
   conditions = conditions_for Roll.search_keys, params
+  order = order_for Roll, params
   
   rolls = Roll.all({
     :conditions => conditions,
     :fields => fields,
-    :order => "#{params[:order] || 'voted_at'} DESC"
+    :order => order,
   }.merge(pagination_for(params)))
   
   json Roll, rolls.map {|roll| attributes_for roll, fields}, params[:callback]
@@ -99,13 +101,19 @@ helpers do
     callback ? "#{callback}(#{json});" : json
   end
 
-
+  
   def conditions_for(keys, params)
     conditions = {}
     keys.each do |key|
       conditions = conditions.merge(key => params[key]) if params[key]
     end
     conditions
+  end
+  
+  def order_for(model, params)
+    order_key = model.order_keys.detect {|key| params[:order].present? and params[:order].to_sym == key} || model.order_keys.first
+    order_sort = ['DESC', 'ASC'].detect {|sort| params[:sort].to_s.upcase == sort} || 'DESC'
+    "#{order_key} #{order_sort}"
   end
 
   def pagination_for(params)
