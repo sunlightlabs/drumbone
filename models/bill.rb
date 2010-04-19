@@ -134,7 +134,7 @@ class Bill
         :last_updated => Time.now
       }
       
-      timeline = timeline_for doc, votes
+      timeline = timeline_for doc, state, votes
       bill.attributes = timeline
       
       if bill.save
