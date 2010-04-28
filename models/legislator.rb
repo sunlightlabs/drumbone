@@ -28,7 +28,7 @@ class Legislator
   end
   
   def self.basic_fields
-    [:last_updated, :bioguide_id, :govtrack_id, :chamber, :in_office, :first_name, :nickname, :last_name, :name_suffix, :state, :district, :party, :title, :gender, :phone, :website, :twitter_id, :youtube_url, :congress_office]
+    [:last_updated, :bioguide_id, :govtrack_id, :votesmart_id, :chamber, :in_office, :first_name, :nickname, :last_name, :name_suffix, :state, :district, :party, :title, :gender, :phone, :website, :twitter_id, :youtube_url, :congress_office]
   end
   
   def self.update_earmarks
@@ -288,6 +288,7 @@ class Legislator
           'Com' => 'house'
         }[api_legislator.title],
       :govtrack_id => api_legislator.govtrack_id,
+      :votesmart_id => api_legislator.votesmart_id,
       :first_name => api_legislator.firstname,
       :nickname => api_legislator.nickname,
       :last_name => api_legislator.lastname,
