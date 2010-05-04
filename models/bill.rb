@@ -115,7 +115,7 @@ class Bill
       titles = titles_for doc
       state = state_for doc
       votes = votes_for doc
-      last_voted_at = votes.last ? votes.last[:voted_at] : nil
+      last_vote_at = votes.last ? votes.last[:voted_at] : nil
       introduced_at = Time.parse doc.at(:introduced)['datetime']
       
       bill.attributes = {
@@ -140,7 +140,7 @@ class Bill
         :last_action => actions.last,
         :last_action_at => actions.last ? actions.last[:acted_at] : nil,
         :votes => votes,
-        :last_voted_at => last_voted_at,
+        :last_vote_at => last_vote_at,
         :introduced_at => introduced_at,
         :last_updated => Time.now
       }
