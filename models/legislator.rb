@@ -31,6 +31,42 @@ class Legislator
     [:last_updated, :bioguide_id, :govtrack_id, :votesmart_id, :chamber, :in_office, :first_name, :nickname, :last_name, :name_suffix, :state, :district, :party, :title, :gender, :phone, :website, :twitter_id, :youtube_url, :congress_office]
   end
   
+  
+  def self.update_contributions(options = {})
+    start = Time.now
+    
+    last_updated = File.read("data/contributions/brisket_timestamp.txt").strip
+    cycle = options[:cycle] || current_cycle
+    
+    all.each do |legislator|
+      next if legislator.crp_id.blank?
+      # puts "Fetching contribution info from Brisket for legislator with crp_id #{legislator.crp_id}..."
+      
+      results = Brisket.new.top_contributors legislator.crp_id, cycle
+      top_contributors = []
+      
+      results.each_with_index do |contributor, i|
+        top_contributors << {
+          :rank => i + 1,
+          :employee_amount => contributor["employee_amount"],
+          :direct_amount => contributor["direct_amount"],
+          :total_amount => contributor["total_amount"],
+          :name => contributor["name"]
+        }
+      end
+      
+      legislator.attributes = {
+        :contributions => {
+           cycle.to_s => {
+             :top_contributors => top_contributors
+      }}}
+      
+      legislator.save
+    end
+    
+    Report.success "Contributions", "Updated contribution information for all legislators for the #{cycle} cycle", {:elapsed_time => Time.now - start}
+  end
+  
   def self.update_earmarks
     start = Time.now
     
@@ -86,7 +122,7 @@ class Legislator
       end
     end
     
-    Report.success "Earmarks", "Updated earmark information for all active legislators", {:elapsed_time => Time.now - start}
+    Report.success "Earmarks", "Updated earmark information for all legislators", {:elapsed_time => Time.now - start}
   end
   
   def self.update_sponsorships
@@ -289,6 +325,7 @@ class Legislator
         }[api_legislator.title],
       :govtrack_id => api_legislator.govtrack_id,
       :votesmart_id => api_legislator.votesmart_id,
+      :crp_id => api_legislator.crp_id,
       :first_name => api_legislator.firstname,
       :nickname => api_legislator.nickname,
       :last_name => api_legislator.lastname,
@@ -305,6 +342,13 @@ class Legislator
       :youtube_url => api_legislator.youtube_url,
       :last_updated => Time.now
     }
+  end
+  
+  # if it's an even year, that's it
+  # if it's an odd year, add one
+  def self.current_cycle
+    year = Time.now.year
+    year % 2 == 0 ? year : year + 1
   end
   
 end
