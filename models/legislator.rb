@@ -34,13 +34,14 @@ class Legislator
   
   def self.update_contributions(options = {})
     start = Time.now
+    missing_ids = []
     
     last_updated = File.read("data/contributions/brisket_timestamp.txt").strip
     cycle = options[:cycle] || current_cycle
     
     all.each do |legislator|
       if legislator.crp_id.blank?
-        Report.warning "Contributions", "Missing crp_id from legislator with bioguide_id #{legislator.bioguide_id}", {:bioguide_id => legislator.bioguide_id}
+        missing_ids << legislator.bioguide_id
         next
       end
       
@@ -72,6 +73,10 @@ class Legislator
       }}
       
       legislator.save
+    end
+    
+    if missing_ids.any?
+      Report.warning "Contributions", "Missing crp_ids from #{missing_ids.size} legislators, bioguide_ids attached", {:missing_ids => missing_ids}
     end
     
     Report.success "Contributions", "Updated contribution information for all legislators for the #{cycle} cycle", {:elapsed_time => Time.now - start}
