@@ -18,7 +18,7 @@ class Brisket
     case response.code
     when 200
       begin
-        response.first["id"]
+        response and response.size > 0 ? response.first["id"] : nil
       rescue
         raise RuntimeError, "Error parsing response: #{response.body}"
       end
@@ -29,6 +29,8 @@ class Brisket
   
   def top_contributors(crp_id, cycle, top = 10)
     entity_id = get_entity_id crp_id
+    return nil unless entity_id
+    
     response = Brisket.get "/aggregates/pol/#{entity_id}/contributors.json", :query => {
       :apikey => Brisket.api_key,
       :cycle => cycle,

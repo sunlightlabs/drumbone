@@ -39,12 +39,20 @@ class Legislator
     cycle = options[:cycle] || current_cycle
     
     all.each do |legislator|
-      next if legislator.crp_id.blank?
+      if legislator.crp_id.blank?
+        Report.warning "Contributions", "Missing crp_id from legislator with bioguide_id #{legislator.bioguide_id}", {:bioguide_id => legislator.bioguide_id}
+        next
+      end
+      
       # puts "Fetching contribution info from Brisket for legislator with crp_id #{legislator.crp_id}..."
-      
       results = Brisket.new.top_contributors legislator.crp_id, cycle
-      top_contributors = []
       
+      if results.nil?
+        Report.warning "Contributions", "Missing contributions information for legislator with crp_id #{legislator.crp_id}", {:crp_id => legislator.crp_id}
+        next
+      end
+      
+      top_contributors = []
       results.each_with_index do |contributor, i|
         top_contributors << {
           :rank => i + 1,
@@ -59,7 +67,9 @@ class Legislator
         :contributions => {
            cycle.to_s => {
              :top_contributors => top_contributors
-      }}}
+           },
+           :last_updated => last_updated
+      }}
       
       legislator.save
     end
