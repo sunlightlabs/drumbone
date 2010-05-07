@@ -7,6 +7,7 @@
 
 require 'sunlight'
 require 'fastercsv'
+require 'votesmart'
 
 class Legislator
   include MongoMapper::Document
@@ -31,6 +32,76 @@ class Legislator
     [:last_updated, :bioguide_id, :govtrack_id, :votesmart_id, :chamber, :in_office, :first_name, :nickname, :last_name, :name_suffix, :state, :district, :party, :title, :gender, :phone, :website, :twitter_id, :youtube_url, :congress_office]
   end
   
+  def self.update_ratings(options = {})
+    start = Time.now
+    missing_ids = []
+    
+    # generally we're going to do this with a limit, since it takes so long
+    limit = options[:limit] || Legislator.count(:in_office => true)
+    legislators = all({
+      :in_office => true, 
+      :limit => limit, 
+      :order => "ratings.last_updated ASC"
+    })
+    
+    last_updated = Time.now
+    
+    # puts "[National] Loading SIGs..."
+    national_categories = VoteSmart::Rating.get_categories['categories']['category']
+    national_sigs = national_categories.map do |category|
+      VoteSmart::Rating.get_sig_list(category['categoryId'])['sigs']['sig']
+    end.flatten
+    
+    
+    legislators.each do |legislator|
+      if legislator.votesmart_id.blank?
+        missing_ids << legislator.bioguide_id
+        next
+      end
+      
+      ratings = {}
+      
+      # puts "[#{legislator.state}] Loading SIGs..."
+      state_categories = VoteSmart::Rating.get_categories legislator.state
+      state_sigs = []
+      if state_categories['categories']
+        state_sigs = state_categories['categories']['category'].map do |category|
+          VoteSmart::Rating.get_sig_list(category['categoryId'], legislator.state)['sigs']['sig']
+        end.flatten
+      end
+      
+      (national_sigs + state_sigs).each do |sig|
+        sig_id = sig['sigId']
+        name = sig['name']
+        
+        # puts "[#{legislator.bioguide_id}] Fetching rating for #{name} (#{sig_id})..."
+        
+        results = VoteSmart::Rating.get_candidate_rating legislator.votesmart_id, sig_id
+        if results and results['candidateRating']
+          rating = results['candidateRating']['rating']
+          rating = rating.first if rating.is_a?(Array)
+          
+          # puts "\t[#{legislator.bioguide_id}] Storing a rating of #{rating['rating']}"
+          
+          ratings[sig_id] = {
+            :timespan => rating['timespan'],
+            :rating => rating['rating'],
+            :name => name
+          }
+        end
+      end
+      
+      legislator.attributes = {:ratings => ratings.merge(:last_updated => last_updated)}
+      legislator.save
+    end
+    
+    
+    if missing_ids.any?
+      Report.warning "Ratings", "Missing votesmart_ids from #{missing_ids.size} legislators, bioguide_ids attached", {:missing_ids => missing_ids}
+    end
+    
+    Report.success "Ratings", "Updated interest group ratings for all in_office legislators", {:elapsed_time => Time.now - start}
+  end
   
   def self.update_contributions(options = {})
     start = Time.now

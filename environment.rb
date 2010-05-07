@@ -36,4 +36,5 @@ configure do
   Report.email = config[:email]
   Sunlight::Base.api_key = config[:sunlight_api_key]
   Brisket.api_key = config[:sunlight_api_key]
+  VoteSmart.api_key = config[:votesmart_api_key]
 end

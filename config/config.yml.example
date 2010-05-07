@@ -1,4 +1,5 @@
 :sunlight_api_key: # fill in
+:votesmart_api_key: # fill in
 
 :database:
   :host: localhost
