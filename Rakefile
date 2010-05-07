@@ -21,6 +21,7 @@ namespace :update do
     Legislator.update_contracts
     Legislator.update_earmarks
     Legislator.update_contributions
+    Legislator.update_ratings :limit => 10
   end
 end
 
