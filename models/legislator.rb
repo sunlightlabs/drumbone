@@ -35,6 +35,7 @@ class Legislator
   def self.update_ratings(options = {})
     start = Time.now
     missing_ids = []
+    skipped_ids = []
     
     # generally we're going to do this with a limit, since it takes so long
     limit = options[:limit] || Legislator.count(:in_office => true)
@@ -49,7 +50,12 @@ class Legislator
     # puts "[National] Loading SIGs..."
     national_categories = VoteSmart::Rating.get_categories['categories']['category']
     national_sigs = national_categories.map do |category|
-      VoteSmart::Rating.get_sig_list(category['categoryId'])['sigs']['sig']
+      begin
+        VoteSmart::Rating.get_sig_list(category['categoryId'])['sigs']['sig']
+      rescue VoteSmart::RequestFailed
+        Report.failure "Ratings", "Connection error when getting national SIG list for interest group ratings, aborting"
+        return
+      end
     end.flatten
     
     
@@ -66,7 +72,11 @@ class Legislator
       state_sigs = []
       if state_categories['categories']
         state_sigs = state_categories['categories']['category'].map do |category|
-          VoteSmart::Rating.get_sig_list(category['categoryId'], legislator.state)['sigs']['sig']
+          begin
+            VoteSmart::Rating.get_sig_list(category['categoryId'], legislator.state)['sigs']['sig']
+          rescue VoteSmart::RequestFailed
+            Report.failure "Ratings", "Connection error when getting #{legislator.state} state SIG list for interest group ratings, aborting"
+          end
         end.flatten
       end
       
@@ -76,7 +86,14 @@ class Legislator
         
         # puts "[#{legislator.bioguide_id}] Fetching rating for #{name} (#{sig_id})..."
         
-        results = VoteSmart::Rating.get_candidate_rating legislator.votesmart_id, sig_id
+        results = nil
+        begin
+          results = VoteSmart::Rating.get_candidate_rating legislator.votesmart_id, sig_id
+        rescue VoteSmart::RequestFailed
+          skipped_ids << legislator.bioguide_id
+          next
+        end
+        
         if results and results['candidateRating']
           rating = results['candidateRating']['rating']
           rating = rating.first if rating.is_a?(Array)
@@ -95,12 +112,15 @@ class Legislator
       legislator.save
     end
     
+    if skipped_ids.any?
+      Report.warning "Ratings", "Skipped ratings data for #{skipped_ids.size} legislators due to VoteSmart connection error", {:skipped_ids => skipped_ids}
+    end
     
     if missing_ids.any?
       Report.warning "Ratings", "Missing votesmart_ids from #{missing_ids.size} legislators, bioguide_ids attached", {:missing_ids => missing_ids}
     end
     
-    Report.success "Ratings", "Updated interest group ratings for all in_office legislators", {:elapsed_time => Time.now - start}
+    Report.success "Ratings", "Updated interest group ratings for #{limit} in_office legislators", {:elapsed_time => Time.now - start}
   end
   
   def self.update_contributions(options = {})
