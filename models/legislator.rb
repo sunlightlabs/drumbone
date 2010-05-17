@@ -76,6 +76,7 @@ class Legislator
             VoteSmart::Rating.get_sig_list(category['categoryId'], legislator.state)['sigs']['sig']
           rescue VoteSmart::RequestFailed
             Report.failure "Ratings", "Connection error when getting #{legislator.state} state SIG list for interest group ratings, aborting"
+            return
           end
         end.flatten
       end
