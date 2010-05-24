@@ -111,7 +111,7 @@ class Roll
         :session => session,
         :result => doc.at(:result).inner_text,
         :bill_id => bill_id,
-        :voted_at => Time.parse(doc.root['datetime']),
+        :voted_at => Bill.govtrack_time_for(doc.root['datetime']),
         :type => doc.at(:type).inner_text,
         :question => doc.at(:question).inner_text,
         :required => doc.at(:required).inner_text,

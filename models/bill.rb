@@ -89,7 +89,7 @@ class Bill
     bills = Dir.glob "data/govtrack/#{session}/bills/*.xml"
     
     # debug helpers
-    # bills = Dir.glob "data/govtrack/#{session}/bills/h3590.xml"
+    # bills = Dir.glob "data/govtrack/#{session}/bills/hr103.xml"
     # bills = bills.first 20
     
     bills.each do |path|
@@ -116,7 +116,7 @@ class Bill
       state = state_for doc
       votes = votes_for doc
       last_vote_at = votes.last ? votes.last[:voted_at] : nil
-      introduced_at = Time.parse doc.at(:introduced)['datetime']
+      introduced_at = govtrack_time_for doc.at(:introduced)['datetime']
       
       bill.attributes = {
         :filename => filename,
@@ -232,7 +232,7 @@ class Bill
     end
     
     if vetoed_action = doc.at('//actions/vetoed')
-      timeline[:vetoed_at] = Time.parse vetoed_action['datetime']
+      timeline[:vetoed_at] = govtrack_time_for vetoed_action['datetime']
       timeline[:vetoed] = true
     else
       timeline[:vetoed] = false
@@ -249,7 +249,7 @@ class Bill
     end
     
     if enacted_action = doc.at('//actions/enacted')
-      timeline[:enacted_at] = Time.parse enacted_action['datetime']
+      timeline[:enacted_at] = govtrack_time_for enacted_action['datetime']
       timeline[:enacted] = true
     else
       timeline[:enacted] = false
@@ -257,7 +257,7 @@ class Bill
     
     # finally, set the awaiting_signature flag, inferring it from the details above
     if timeline[:passed] and !timeline[:vetoed] and !timeline[:enacted] and topresident_action = doc.search('//actions/topresident').last
-      timeline[:awaiting_signature_since] = Time.parse topresident_action['datetime']
+      timeline[:awaiting_signature_since] = govtrack_time_for topresident_action['datetime']
       timeline[:awaiting_signature] = true
     else
       timeline[:awaiting_signature] = false
@@ -275,7 +275,7 @@ class Bill
   def self.actions_for(doc)
     doc.search('//actions/*').reject {|a| a.class == Hpricot::Text}.map do |action|
       {
-        :acted_at => Time.parse(action['datetime']),
+        :acted_at => govtrack_time_for(action['datetime']),
         :text => (action/:text).inner_text,
         :type => action.name
       }
@@ -285,7 +285,7 @@ class Bill
   def self.votes_for(doc)
     chamber = {'h' => 'house', 's' => 'senate'}
     doc.search('//actions/vote|//actions/vote2|//actions/vote-aux').map do |vote|
-      voted_at = Time.parse vote['datetime']
+      voted_at = govtrack_time_for vote['datetime']
       chamber_code = vote['where']
       how = vote['how']
       
@@ -306,6 +306,17 @@ class Bill
     end
   end
   
+  # If it's a full timestamp with hours and minutes and everything, store that
+  # Otherwise, if it's just a day, store the day with a date of noon UTC
+  # So that it's the same date everywhere
+  def self.govtrack_time_for(timestamp)
+    if timestamp =~ /:/
+      Time.xmlschema timestamp
+    else
+      time = Time.parse timestamp
+      time.getutc + (12-time.getutc.hour).hours
+    end
+  end
   
   def self.legislator_for(filename, govtrack_id, legislators, missing_ids)
     legislator = legislators[govtrack_id]
