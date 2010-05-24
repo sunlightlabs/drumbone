@@ -49,7 +49,7 @@ class Bill
   def self.basic_fields
     [
       :bill_id, :type, :code, :number, :session, :chamber, :last_updated, :state, 
-      :short_title, :official_title, 
+      :short_title, :official_title, :popular_title,
       :sponsor_id, :cosponsors_count, :votes_count, :last_action_at, :last_vote_at, 
       :introduced_at, :house_result, :house_result_at, :senate_result, :senate_result_at, :passed, :passed_at,
       :vetoed, :vetoed_at, :override_house_result, :override_house_result_at,
@@ -89,7 +89,7 @@ class Bill
     bills = Dir.glob "data/govtrack/#{session}/bills/*.xml"
     
     # debug helpers
-    # bills = Dir.glob "data/govtrack/#{session}/bills/s2968.xml"
+    # bills = Dir.glob "data/govtrack/#{session}/bills/h3590.xml"
     # bills = bills.first 20
     
     bills.each do |path|
@@ -128,6 +128,7 @@ class Bill
         :state => state,
         :short_title => most_recent_title_from(titles, :short),
         :official_title => most_recent_title_from(titles, :official),
+        :popular_title => most_recent_title_from(titles, :popular),
         :titles => titles,
         :keywords => doc.search('//subjects/term').map {|term| term['name']},
         :summary => summary_for(doc),
