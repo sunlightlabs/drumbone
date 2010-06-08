@@ -22,6 +22,8 @@ class Legislator
   ensure_index :in_office
   ensure_index :chamber
   
+  ensure_index "ratings.last_updated"
+  
   timestamps!
   
   def self.unique_keys
