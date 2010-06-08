@@ -36,14 +36,20 @@ class Legislator
     start = Time.now
     missing_ids = []
     skipped_ids = []
+    year = Time.now.year
     
     # generally we're going to do this with a limit, since it takes so long
-    limit = options[:limit] || Legislator.count(:in_office => true)
-    legislators = all({
-      :in_office => true, 
-      :limit => limit, 
-      :order => "ratings.last_updated ASC"
-    })
+    legislators = []
+    if options[:bioguide_id]
+      legislators = [Legislator.first :bioguide_id => options[:bioguide_id]]
+    else
+      limit = options[:limit] || Legislator.count(:in_office => true)
+      legislators = all({
+        :in_office => true, 
+        :limit => limit, 
+        :order => "ratings.last_updated ASC"
+      })
+    end
     
     last_updated = Time.now
     
@@ -99,13 +105,17 @@ class Legislator
           rating = results['candidateRating']['rating']
           rating = rating.first if rating.is_a?(Array)
           
-          # puts "\t[#{legislator.bioguide_id}] Storing a rating of #{rating['rating']}"
-          
-          ratings[sig_id] = {
-            :timespan => rating['timespan'],
-            :rating => rating['rating'],
-            :name => name
-          }
+          if (rating['timespan'] =~ /#{year}/) or (rating['timespan'] =~ /#{year-1}/)
+            # puts "\t[#{legislator.bioguide_id}] Storing a rating of #{rating['rating']}"
+            
+            ratings[sig_id] = {
+              :timespan => rating['timespan'],
+              :rating => rating['rating'],
+              :name => name
+            }
+          else
+            # puts "\t[#{legislator.bioguide_id}] Skipping a rating for #{name} from #{rating['timespan']}"
+          end
         end
       end
       
