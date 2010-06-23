@@ -76,7 +76,7 @@ class Legislator
       end
     end
     
-    puts "Found parties for #{parties.keys.size} in-office legislators"
+    # puts "Found parties for #{parties.keys.size} in-office legislators"
     
     
     # go through each in_office legislator by crp_id
