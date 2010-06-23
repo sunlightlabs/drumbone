@@ -34,6 +34,74 @@ class Legislator
     [:last_updated, :bioguide_id, :govtrack_id, :votesmart_id, :chamber, :in_office, :first_name, :nickname, :last_name, :name_suffix, :state, :district, :party, :title, :gender, :phone, :website, :twitter_id, :youtube_url, :congress_office]
   end
   
+  def self.update_parties(options = {})
+    start = Time.now
+    missing_ids = []
+    
+    last_updated = Time.now
+    
+    # number of days to cut off past parties
+    begin_days = 90 # 3 months
+    
+    
+    # download from party time
+    unless options[:skip_download]
+      old_dir = Dir.pwd
+      FileUtils.mkdir_p "data/partytime"
+      Dir.chdir "data/partytime"
+      system "rm partytime_dump_all.csv"
+      system "wget http://politicalpartytime.org/www/partytime_dump_all.csv"
+      Dir.chdir old_dir
+    end
+    
+    # go through the CSV
+    parties = {}
+    FasterCSV.foreach("data/partytime/partytime_dump_all.csv") do |row|
+      crp_id = row[23]
+      next unless crp_id.present?
+      
+      # only select parties newer than 3 months ago
+      timestamp = "#{row[4]} #{row[6]}"
+      if Time.parse(timestamp) > begin_days.days.ago
+        parties[crp_id] ||= []
+        
+        parties[crp_id] << {
+          :date => row[4],
+          :start_time => row[6],
+          :type => row[8],
+          :venue => row[9],
+          :venue_url => row[15],
+          :contribution_info => row[17]
+        }
+      end
+    end
+    
+    puts "Found parties for #{parties.keys.size} in-office legislators"
+    
+    
+    # go through each in_office legislator by crp_id
+    Legislator.all(:in_office => true).each do |legislator|
+      if legislator.crp_id.blank?
+        missing_ids << legislator.bioguide_id
+        next
+      end
+      
+      events = parties[legislator.crp_id] || []
+      
+      # puts "[#{legislator.bioguide_id}] Updated with #{events.size} parties"
+      
+      legislator.attributes = {:parties => {:events => events, :last_updated => last_updated}}
+      legislator.save!
+    end
+    
+    
+    if missing_ids.any?
+      Report.warning "Parties", "Missing crp_ids from #{missing_ids.size} legislators, bioguide_ids attached", {:missing_ids => missing_ids}
+    end
+    
+    Report.success "Parties", "Updated recent (> #{begin_days} days) for all in-office legislators", {:elapsed_time => Time.now - start}
+  end
+  
   def self.update_ratings(options = {})
     start = Time.now
     missing_ids = []
@@ -122,7 +190,7 @@ class Legislator
       end
       
       legislator.attributes = {:ratings => ratings.merge(:last_updated => last_updated)}
-      legislator.save
+      legislator.save!
     end
     
     if skipped_ids.any?
