@@ -13,8 +13,6 @@ class UsaSpending
     top_contractors_from url(year, :pop_cd, "#{state}#{zero district}")
   end
   
-  private
-  
   def self.top_contractors_from(url)
     xml = fetch_url url
     return unless xml
@@ -42,7 +40,7 @@ class UsaSpending
   
   
   def self.url(year, key, location)
-    "#{BASE_URL}?datype=X&detail=-1&fiscal_year=#{year}&#{key}=#{location}"
+    "#{BASE_URL}?datype=X&detail=s&fiscal_year=#{year}&#{key}=#{location}"
   end
   
   def self.fetch_url(url)
