@@ -66,6 +66,7 @@ class Legislator
         parties[crp_id] ||= []
         
         parties[crp_id] << {
+          :party_id => row[0],
           :date => row[4],
           :start_time => row[6],
           :type => row[8],
