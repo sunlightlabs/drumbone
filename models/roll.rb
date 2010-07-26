@@ -29,7 +29,8 @@ class Roll
     {
       :session => String,
       :chamber => String, 
-      :bill_id => String
+      :bill_id => String,
+      :type => String
     }
   end
   
