@@ -101,6 +101,8 @@ class Legislator
     end
     
     Report.success "Parties", "Updated recent (> #{begin_days} days) for all in-office legislators", {:elapsed_time => Time.now - start}
+  rescue Exception => ex
+    Report.failure "Parties", "Exception while updating party time data, error attached", {:message => ex.message, :backtrace => ex.backtrace}
   end
   
   def self.update_ratings(options = {})
@@ -203,6 +205,8 @@ class Legislator
     end
     
     Report.success "Ratings", "Updated interest group ratings for #{limit} in_office legislators", {:elapsed_time => Time.now - start}
+  rescue Exception => ex
+    Report.failure "Ratings", "Exception while updating interest group ratings, error attached", {:message => ex.message, :backtrace => ex.backtrace}
   end
   
   def self.update_contributions(options = {})
@@ -253,6 +257,8 @@ class Legislator
     end
     
     Report.success "Contributions", "Updated contribution information for all legislators for the #{cycle} cycle", {:elapsed_time => Time.now - start}
+  rescue Exception => ex
+    Report.failure "Contributions", "Exception while updating contribution data, error attached", {:message => ex.message, :backtrace => ex.backtrace}
   end
   
   def self.update_earmarks
@@ -311,6 +317,8 @@ class Legislator
     end
     
     Report.success "Earmarks", "Updated earmark information for all legislators", {:elapsed_time => Time.now - start}
+  rescue Exception => ex
+    Report.failure "Earmarks", "Exception while updating earmark data, error attached", {:message => ex.message, :backtrace => ex.backtrace}
   end
   
   def self.update_sponsorships
