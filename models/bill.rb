@@ -141,6 +141,7 @@ class Bill
         :last_action => actions.last,
         :last_action_at => actions.last ? actions.last[:acted_at] : nil,
         :votes => votes,
+        :votes_count => votes.size,
         :last_vote_at => last_vote_at,
         :introduced_at => introduced_at,
         :last_updated => Time.now
