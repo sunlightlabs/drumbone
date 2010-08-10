@@ -3,7 +3,7 @@ require 'httparty'
 class Brisket
   include HTTParty
   format :json
-  base_uri "http://184.73.196.50/api/1.0/"
+  base_uri "http://influenceexplorer.com:8000/api/1.0/"
   
   def self.api_key=(api_key); @@api_key = api_key; end
   def self.api_key; @@api_key; end
