@@ -27,10 +27,7 @@ class Brisket
     end
   end
   
-  def top_contributors(crp_id, cycle, top = 10)
-    entity_id = get_entity_id crp_id
-    return nil unless entity_id
-    
+  def top_contributors(entity_id, cycle, top = 10)
     response = Brisket.get "/aggregates/pol/#{entity_id}/contributors.json", :query => {
       :apikey => Brisket.api_key,
       :cycle => cycle,

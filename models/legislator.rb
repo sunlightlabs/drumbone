@@ -211,22 +211,33 @@ class Legislator
   
   def self.update_contributions(options = {})
     start = Time.now
+    brisket = Brisket.new
+    
     missing_ids = []
+    missing_entity_ids = []
+    missing_contributions = []
     
     last_updated = File.read("data/contributions/brisket_timestamp.txt").strip
     cycle = options[:cycle] || current_cycle
     
     all.each do |legislator|
       if legislator.crp_id.blank?
+        puts "[#{legislator.bioguide_id}] No CRP ID for legislator."
         missing_ids << legislator.bioguide_id
         next
       end
       
-      # puts "Fetching contribution info from Brisket for legislator with crp_id #{legislator.crp_id}..."
-      results = Brisket.new.top_contributors legislator.crp_id, cycle
+      entity_id = brisket.get_entity_id legislator.crp_id
+      if entity_id.nil?
+        puts "[#{legislator.bioguide_id}] Couldn't fetch entity ID for legislator."
+        missing_entity_ids << legislator.bioguide_id
+        next
+      end
       
+      results = Brisket.new.top_contributors entity_id, cycle
       if results.nil?
-        Report.warning "Contributions", "Missing contributions information for legislator with crp_id #{legislator.crp_id}", {:crp_id => legislator.crp_id}
+        puts "[#{legislator.bioguide_id}] Couldn't fetch contribution information for legislator."
+        missing_contributions << legislator.bioguide_id
         next
       end
       
@@ -254,6 +265,14 @@ class Legislator
     
     if missing_ids.any?
       Report.warning "Contributions", "Missing crp_ids from #{missing_ids.size} legislators, bioguide_ids attached", {:missing_ids => missing_ids}
+    end
+    
+    if missing_entity_ids.any?
+      Report.warning "Contributions", "Missing entity_ids from #{missing_entity_ids.size} legislators, bioguide_ids attached", {:missing_entity_ids => missing_entity_ids}
+    end
+    
+    if missing_contributions.any?
+      Report.warning "Contributions", "Missing contributions information for  #{missing_contributions.size} legislators, bioguide_ids attached", {:missing_contributions => missing_contributions}
     end
     
     Report.success "Contributions", "Updated contribution information for all legislators for the #{cycle} cycle", {:elapsed_time => Time.now - start}
