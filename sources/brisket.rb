@@ -3,14 +3,14 @@ require 'httparty'
 class Brisket
   include HTTParty
   format :json
-  base_uri "http://influenceexplorer.com:8000/api/1.0/"
+  base_uri "http://transparencydata.com/api/1.0/"
   
   def self.api_key=(api_key); @@api_key = api_key; end
   def self.api_key; @@api_key; end
   
     
   def get_entity_id(crp_id)
-    response = Brisket.get "/entities/id_lookup", :query => {
+    response = Brisket.get "/entities/id_lookup.json", :query => {
       :apikey => Brisket.api_key,
       :namespace => "urn:crp:recipient",
       :id => crp_id
