@@ -20,7 +20,6 @@ namespace :update do
     Legislator.update_sponsorships
     Legislator.update_contracts
     Legislator.update_earmarks
-    Legislator.update_contributions
     Legislator.update_ratings :limit => 10
     Legislator.update_parties
   end
