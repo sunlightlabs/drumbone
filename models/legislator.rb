@@ -57,23 +57,27 @@ class Legislator
     # go through the CSV
     parties = {}
     FasterCSV.foreach("data/partytime/partytime_dump_all.csv") do |row|
-      crp_id = row[23]
-      next unless crp_id.present?
+      crp_ids = row[25]
+      next unless crp_ids.present?
+      
+      crp_ids = crp_ids.split "||"
       
       # only select parties newer than 3 months ago
       timestamp = "#{row[4]} #{row[6]}"
       if Time.parse(timestamp) > begin_days.days.ago
-        parties[crp_id] ||= []
-        
-        parties[crp_id] << {
-          :party_id => row[0],
-          :date => row[4],
-          :start_time => row[6],
-          :type => row[8],
-          :venue => row[9],
-          :venue_url => row[15],
-          :contribution_info => row[17]
-        }
+        crp_ids.each do |crp_id|
+          parties[crp_id] ||= []
+          
+          parties[crp_id] << {
+            :party_id => row[0],
+            :date => row[4],
+            :start_time => row[6],
+            :type => row[8],
+            :venue => row[9],
+            :venue_url => row[15],
+            :contribution_info => row[17]
+          }
+        end
       end
     end
     
@@ -100,7 +104,7 @@ class Legislator
       Report.warning "Parties", "Missing crp_ids from #{missing_ids.size} legislators, bioguide_ids attached", {:missing_ids => missing_ids}
     end
     
-    Report.success "Parties", "Updated recent (> #{begin_days} days) for all in-office legislators", {:elapsed_time => Time.now - start}
+    Report.success "Parties", "Updated recent (> #{begin_days} days) for #{parties.keys.size} in-office legislators", {:elapsed_time => Time.now - start, :crp_ids => parties.keys}
   rescue Exception => ex
     Report.failure "Parties", "Exception while updating party time data, error attached", {:message => ex.message, :backtrace => ex.backtrace}
   end
