@@ -338,6 +338,8 @@ class Legislator
     
     count = 0
     
+    exceptions = []
+    
     representatives = Legislator.all :conditions => {:chamber => 'house', :in_office => true}
     senators = Legislator.all :conditions => {:chamber => 'senate', :in_office => true}
     
@@ -347,7 +349,12 @@ class Legislator
     states.each do |state|
       # puts "[#{state}] Storing contractor totals"
       
-      state_info[state] = UsaSpending.top_contractors_for_state fiscal_year, state
+      begin
+        state_info[state] = UsaSpending.top_contractors_for_state fiscal_year, state
+      rescue NoMethodError => ex
+        exceptions << {:state => state, :exception => ex}
+        next
+      end
     end
     
     senators.each do |senator|
@@ -364,13 +371,23 @@ class Legislator
     representatives.each do |representative|
       # puts "[#{representative.bioguide_id}] Updating contracts for #{representative.title}. #{representative.last_name}"
       
-      info = UsaSpending.top_contractors_for_district fiscal_year, representative.state, representative.district
+      begin
+        info = UsaSpending.top_contractors_for_district fiscal_year, representative.state, representative.district
+      rescue NoMethodError => ex
+        exceptions << {:state => representative.state, :district => representative.district, :exception => ex}
+        next
+      end
+      
       representative.attributes = {
         :contracts => info.merge(:fiscal_year => fiscal_year)
       }
       
       representative.save
       count += 1
+    end
+    
+    if exceptions.any?
+      Report.warning "Contracts", "Got #{exceptions.size} network exceptions while attempting to update contracts from USASpending.gov, exceptions and states/districts attached", {:exceptions => exceptions, :fiscal_year => fiscal_year}
     end
     
     Report.success "Contracts", "Updated #{count} legislators with contract data from USASpending.gov", {:elapsed_time => Time.now - start_time}
