@@ -352,7 +352,7 @@ class Legislator
       begin
         state_info[state] = UsaSpending.top_contractors_for_state fiscal_year, state
       rescue NoMethodError => ex
-        exceptions << {:state => state, :exception => ex}
+        exceptions << {:state => state, :backtrace => ex.backtrace}
         next
       end
     end
