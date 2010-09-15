@@ -3,9 +3,10 @@ require 'sinatra'
 require 'sunlight'
 
 gem 'activesupport', '= 2.3.5'
-gem 'mongo', ">=1.0"
-gem 'mongo_ext', ">= 0.18.3"
-gem 'mongo_mapper', '>= 0.7', '< 0.8'
+gem 'mongo', '=1.0.7'
+gem 'mongo_ext', '= 0.19.3'
+gem 'mongo_mapper', '= 0.8.3'
+
 require 'active_support' 
 require 'mongo'
 require 'mongo_mapper'
