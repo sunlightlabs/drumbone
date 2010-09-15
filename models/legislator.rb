@@ -437,6 +437,8 @@ class Legislator
     end
     
     active_count + inactive_count
+  rescue Exception => ex
+    Report.failure self, "Exception while fetching basic legislator data, error attached", {:message => ex.message, :backtrace => ex.backtrace}
   end
   
   
