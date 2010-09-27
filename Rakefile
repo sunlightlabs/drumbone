@@ -83,7 +83,9 @@ namespace :api do
       end
     end
     
-    if reports.map {|r| r[:count]}.sum == Hit.count(conditions)
+    sum_count = reports.map {|r| r[:count]}.sum
+    hit_count = Hit.count conditions
+    if sum_count == hit_count
       api_name = config[:services][:api_name]
       shared_secret = config[:services][:shared_secret]
       
@@ -91,18 +93,21 @@ namespace :api do
         begin
           SunlightServices.report(report[:key], report[:method], report[:count], day, api_name, shared_secret) unless test
         rescue Exception => exception
-          Report.failure 'Analytics', "Problem filing a report, error and report data attached", {:exception => exception, :report => report, :day => day}
+          Report.failure 'Analytics', "Problem filing a report, error and report data attached", {:error_message => exception.message, :backtrace => exception.backtrace, :report => report, :day => day}
         end
       end
+      
+      if test
+        puts "\nWould report for #{day}:\n\n#{reports.inspect}\n\nTotal hits: #{reports.sum {|r| r[:count]}}\n\n"
+      else
+        Report.success 'Analytics', "Filed #{reports.size} report(s) for #{day}.", {:elapsed_time => (Time.now - start_time)}
+      end
+    
     else
-      Report.failure 'Analytics', "Sanity check failed: error calculating hit reports. Reports attached.", {:reports => reports}
+      Report.failure 'Analytics', "Sanity check failed: error calculating hit reports. Reports attached.", {:reports => reports, :day => day}
+      
     end
     
-    if test
-      puts "\nWould report for #{day}:\n\n#{reports.inspect}\n\n"
-    else
-      Report.success 'Analytics', "Filed #{reports.size} report(s) for #{day}.", {:elapsed_time => (Time.now - start_time)}
-    end
   end
   
 end
