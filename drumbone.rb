@@ -117,7 +117,10 @@ helpers do
   def order_for(model, params)
     order_key = model.order_keys.detect {|key| params[:order].present? and params[:order].to_sym == key} || model.order_keys.first
     order_sort = ['DESC', 'ASC'].detect {|sort| params[:sort].to_s.upcase == sort} || 'DESC'
-    "#{order_key} #{order_sort}"
+    
+    secondary_sort = "#{model.unique_keys.first} DESC"
+    
+    "#{order_key} #{order_sort}, #{secondary_sort}"
   end
 
   def pagination_for(params)
