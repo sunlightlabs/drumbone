@@ -106,7 +106,7 @@ class Legislator
     
     Report.success "Parties", "Updated recent (> #{begin_days} days) for #{parties.keys.size} in-office legislators", {:elapsed_time => Time.now - start, :crp_ids => parties.keys}
   rescue Exception => ex
-    Report.failure "Parties", "Exception while updating party time data, error attached", {:message => ex.message, :backtrace => ex.backtrace}
+    Report.failure "Parties", "Exception while updating party time data, error attached", {:error_message => ex.message, :backtrace => ex.backtrace}
   end
   
   def self.update_ratings(options = {})
@@ -210,7 +210,7 @@ class Legislator
     
     Report.success "Ratings", "Updated interest group ratings for #{limit} in_office legislators", {:elapsed_time => Time.now - start}
   rescue Exception => ex
-    Report.failure "Ratings", "Exception while updating interest group ratings, error attached", {:message => ex.message, :backtrace => ex.backtrace}
+    Report.failure "Ratings", "Exception while updating interest group ratings, error attached", {:error_message => ex.message, :backtrace => ex.backtrace}
   end
   
   def self.update_earmarks
@@ -270,7 +270,7 @@ class Legislator
     
     Report.success "Earmarks", "Updated earmark information for all legislators", {:elapsed_time => Time.now - start}
   rescue Exception => ex
-    Report.failure "Earmarks", "Exception while updating earmark data, error attached", {:message => ex.message, :backtrace => ex.backtrace}
+    Report.failure "Earmarks", "Exception while updating earmark data, error attached", {:error_message => ex.message, :backtrace => ex.backtrace}
   end
   
   def self.update_sponsorships
@@ -352,7 +352,7 @@ class Legislator
       begin
         state_info[state] = UsaSpending.top_contractors_for_state fiscal_year, state
       rescue NoMethodError => ex
-        exceptions << {:state => state, :backtrace => ex.backtrace}
+        exceptions << {:state => state, :error_message => ex.message, :backtrace => ex.backtrace}
         next
       end
     end
@@ -374,7 +374,7 @@ class Legislator
       begin
         info = UsaSpending.top_contractors_for_district fiscal_year, representative.state, representative.district
       rescue NoMethodError => ex
-        exceptions << {:state => representative.state, :district => representative.district, :exception => ex}
+        exceptions << {:state => representative.state, :district => representative.district, :error_message => ex.message, :backtrace => ex.backtrace}
         next
       end
       
@@ -392,7 +392,7 @@ class Legislator
     
     Report.success "Contracts", "Updated #{count} legislators with contract data from USASpending.gov", {:elapsed_time => Time.now - start_time}
   rescue Exception => ex
-    Report.failure "Contracts", "Exception while fetching contract data from USASpending.gov, error attached", {:message => ex.message, :backtrace => ex.backtrace}
+    Report.failure "Contracts", "Exception while fetching contract data from USASpending.gov, error attached", {:error_message => ex.message, :backtrace => ex.backtrace}
   end
   
   def self.update(options = {})
@@ -438,7 +438,7 @@ class Legislator
     
     active_count + inactive_count
   rescue Exception => ex
-    Report.failure self, "Exception while fetching basic legislator data, error attached", {:message => ex.message, :backtrace => ex.backtrace}
+    Report.failure self, "Exception while fetching basic legislator data, error attached", {:error_message => ex.message, :backtrace => ex.backtrace}
   end
   
   
