@@ -57,25 +57,25 @@ class Legislator
     # go through the CSV
     parties = {}
     FasterCSV.foreach("data/partytime/partytime_dump_all.csv") do |row|
-      crp_ids = row[25]
+      crp_ids = row[26]
       next unless crp_ids.present?
       
       crp_ids = crp_ids.split "||"
       
       # only select parties newer than 3 months ago
-      timestamp = "#{row[4]} #{row[6]}"
+      timestamp = "#{row[5]} #{row[6]}"
       if Time.parse(timestamp) > begin_days.days.ago
         crp_ids.each do |crp_id|
           parties[crp_id] ||= []
           
           parties[crp_id] << {
             :party_id => row[0],
-            :date => row[4],
-            :start_time => row[5],
-            :type => row[8],
-            :venue => row[9],
-            :venue_url => row[15],
-            :contribution_info => row[17]
+            :date => row[5],
+            :start_time => row[6],
+            :type => row[9],
+            :venue => row[10],
+            :venue_url => row[16],
+            :contribution_info => row[18]
           }
         end
       end
