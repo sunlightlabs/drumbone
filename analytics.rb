@@ -23,23 +23,23 @@ before do
   end
 end
 
-after do
-  if request.path_info =~ /^\/api\//
-    # log hits
-    if params[:captures]
-      Hit.create(
-        :sections => params[:sections],
-        :method => params[:captures][0],
-        :format => params[:captures][1],
-        :key => api_key,
-        :query_string => request.query_string,
-        :user_agent => request.env['HTTP_USER_AGENT'],
-        :ip_address => request.env['REMOTE_ADDR'],
-        :query_hash => request.env['rack.request.query_hash']
-      )
-    end
-  end
-end
+# after do
+#   if request.path_info =~ /^\/api\//
+#     # log hits
+#     if params[:captures]
+#       Hit.create(
+#         :sections => params[:sections],
+#         :method => params[:captures][0],
+#         :format => params[:captures][1],
+#         :key => api_key,
+#         :query_string => request.query_string,
+#         :user_agent => request.env['HTTP_USER_AGENT'],
+#         :ip_address => request.env['REMOTE_ADDR'],
+#         :query_hash => request.env['rack.request.query_hash']
+#       )
+#     end
+#   end
+# end
 
 post '/analytics/create_key/' do
   begin
