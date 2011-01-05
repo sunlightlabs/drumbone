@@ -13,7 +13,7 @@ class Legislator
   include MongoMapper::Document
   
   key :bioguide_id, String, :required => true
-  key :govtrack_id, String, :required => true
+  key :govtrack_id, String
   key :in_office, Boolean, :required => true
   key :chamber, String, :required => true
   
