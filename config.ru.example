@@ -1,4 +1,6 @@
 ENV['RACK_ENV'] = "development"
-require 'drumbone'
+require 'rubygems'
+require 'bundler/setup'
 
+require 'drumbone'
 run Sinatra::Application
