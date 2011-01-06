@@ -4,6 +4,9 @@ set :user, 'drumbone'
 set :application, user
 set :deploy_to, "/home/#{user}/"
 
+set :sock, "#{user}.sock"
+set :gem_bin, "/home/#{user}/.gem/ruby/1.8/bin"
+
 if environment == 'production'
   set :domain, 'drumbone.services.sunlightlabs.com'
 else # environment == 'staging'
@@ -58,14 +61,22 @@ namespace :report do
 end
 
 namespace :deploy do
-  task :start do ; end
-  task :stop do ; end
-  task :migrate do; end
+  desc "Start the server"
+  task :start do
+    run "cd #{current_path} && #{gem_bin}/unicorn -D -l #{shared_path}/#{sock}"
+  end
+  
+  desc "Stop the server"
+  task :stop do
+    run "killall unicorn"
+  end
   
   desc "Restart the server"
   task :restart, :roles => :app, :except => { :no_release => true } do
-    run "touch #{File.join current_path, 'tmp', 'restart.txt'}"
+    run "killall -HUP unicorn"
   end
+  
+  task :migrate do; end
   
   desc "Get shared files into position"
   task :shared_links, :roles => [:web, :app] do
