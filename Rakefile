@@ -113,5 +113,5 @@ namespace :api do
 end
 
 task :environment do
-  require 'environment'
+  require 'config/environment'
 end

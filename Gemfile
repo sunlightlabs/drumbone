@@ -14,6 +14,7 @@ gem 'mongo_mapper', '0.8.6'
 gem 'pony', '0.6'
 
 group :development do
+  gem 'sinatra-reloader'
   gem 'mongrel', '1.2.0.pre2'
   gem 'wirble'
 end

@@ -1,8 +1,16 @@
 #!/usr/bin/env ruby
 
-require 'rubygems'
-require 'sinatra'
-require 'environment'
+require 'config/environment'
+
+# reload in development without starting server
+configure(:development) do |config|
+  require 'sinatra/reloader'
+  config.also_reload "config/environment.rb"
+  config.also_reload "models/*.rb"
+  config.also_reload "sources/*.rb"
+  config.also_reload "report.rb"
+end
+
 
 not_found do
   # If this is a JSONP request, and it did trigger one of the main routes, return an error response
