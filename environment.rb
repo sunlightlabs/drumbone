@@ -1,17 +1,4 @@
-require 'rubygems'
 require 'sinatra'
-require 'sunlight'
-
-
-gem 'activesupport', '= 2.3.5'
-#gem 'plucky', '=0.3.3'
-#gem 'pony', '=0.6'
-gem 'mongo', '=1.0.7'
-gem 'mongo_ext', '= 0.19.3'
-gem 'mongo_mapper', '= 0.8.3'
-
-require 'active_support' 
-require 'mongo'
 require 'mongo_mapper'
 
 def config
@@ -33,6 +20,7 @@ require 'report'
 Dir.glob('models/*.rb').each {|model| load model}
 Dir.glob('sources/*.rb').each {|model| load model}
 
+require 'sunlight'
 
 configure do
   Report.email = config[:email]

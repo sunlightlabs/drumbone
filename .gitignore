@@ -2,3 +2,5 @@
 /config.ru
 /tmp/*
 /data
+/vendor/gems
+/.bundle
