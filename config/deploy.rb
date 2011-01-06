@@ -27,6 +27,7 @@ role :web, domain
 set :use_sudo, false
 after "deploy", "deploy:cleanup"
 after "deploy:update_code", "deploy:shared_links"
+after "deploy:update_code", "deploy:bundle_install"
 
 desc "Run the update command for a given model"
 task :update, :roles => :app, :except => { :no_release => true } do
@@ -74,6 +75,11 @@ namespace :deploy do
   desc "Restart the server"
   task :restart, :roles => :app, :except => { :no_release => true } do
     run "killall -HUP unicorn"
+  end
+  
+  desc "Run bundle install --local"
+  task :bundle_install, :roles => :app, :except => {:no_release => true} do
+    run "cd #{release_path} && #{gem_bin}/bundle install --local"
   end
   
   task :migrate do; end
