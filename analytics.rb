@@ -126,6 +126,7 @@ class Hit
   
   timestamps!
   
+  ensure_index :created_at
   ensure_index :method
   ensure_index :key
   ensure_index :sections
