@@ -1,5 +1,6 @@
 source 'http://rubygems.org'
 
+# gem 'json', '1.5.3'
 gem 'ruby-hmac', '0.4.0'
 
 gem 'sinatra', '1.0'
@@ -15,8 +16,8 @@ gem 'pony', '0.6'
 
 group :development do
   gem 'sinatra-reloader'
-  gem 'mongrel', '1.2.0.pre2'
   gem 'wirble'
+  gem 'rack', '1.3.0'
 end
 
 # individual tasks
