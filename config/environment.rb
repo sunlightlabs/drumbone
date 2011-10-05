@@ -18,6 +18,9 @@ require 'mongo_mapper'
 end
 
 
+# insist on my API-wide timestamp format
+Time::DATE_FORMATS.merge!(:default => Proc.new {|t| t.xmlschema})
+
 def config
   @config ||= YAML.load_file 'config/config.yml'
 end
