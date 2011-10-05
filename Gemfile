@@ -9,6 +9,7 @@ gem 'activesupport', '= 2.3.5'
 gem 'mongo', '1.1.5'
 gem 'bson_ext', '1.1.5'
 gem 'plucky', '0.3.6'
+gem 'SystemTimer', '1.2.3' # mongo gem asks for this
 
 gem 'mongo_mapper', '0.8.6'
 
@@ -18,6 +19,7 @@ group :development do
   gem 'sinatra-reloader'
   gem 'wirble'
   gem 'rack', '1.3.0'
+  gem 'unicorn'
 end
 
 # individual tasks
