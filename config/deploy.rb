@@ -2,16 +2,20 @@ set :environment, (ENV['target'] || 'staging')
 
 set :user, 'drumbone'
 set :application, user
-set :deploy_to, "/home/#{user}/"
 
-set :sock, "#{user}.sock"
-set :gem_bin, "/home/#{user}/.gem/ruby/1.8/bin"
 
 if environment == 'production'
   set :domain, 'rubyhaus.sunlightlabs.org'
+  set :home, "/projects/#{user}"
 else # environment == 'staging'
   set :domain, 'drumbone.sunlightlabs.com'
+  set :home, "/home/#{user}"
 end
+
+set :deploy_to, home
+
+set :sock, "#{user}.sock"
+set :gem_bin, "#{home}/.gem/ruby/1.8/bin"
 
 set :scm, :git
 set :repository, "git://github.com/sunlightlabs/#{application}.git"
