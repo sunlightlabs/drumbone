@@ -8,7 +8,7 @@ set :sock, "#{user}.sock"
 set :gem_bin, "/home/#{user}/.gem/ruby/1.8/bin"
 
 if environment == 'production'
-  set :domain, 'drumbone.services.sunlightlabs.com'
+  set :domain, 'rubyhaus.sunlightlabs.org'
 else # environment == 'staging'
   set :domain, 'drumbone.sunlightlabs.com'
 end
