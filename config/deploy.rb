@@ -5,7 +5,7 @@ set :application, user
 
 
 if environment == 'production'
-  set :domain, 'rubyhaus.sunlightlabs.org'
+  set :domain, '184.73.3.156'
   set :home, "/projects/#{user}"
 else # environment == 'staging'
   set :domain, 'drumbone.sunlightlabs.com'
