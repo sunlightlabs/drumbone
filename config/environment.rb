@@ -19,7 +19,7 @@ end
 
 
 # insist on my API-wide timestamp format
-Time::DATE_FORMATS.merge!(:default => Proc.new {|t| t.utc.strftime "%y-%m-%d %H:%M:%S GMT-00:00"})
+Time::DATE_FORMATS.merge!(:default => Proc.new {|t| t.utc.strftime "%Y/%m/%d %H:%M:%S -0000"})
 
 def config
   @config ||= YAML.load_file 'config/config.yml'
